@@ -1,3 +1,4 @@
+
 import { Text, View, StyleSheet, TextInput, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -78,47 +79,43 @@ const styles = StyleSheet.create({
     color: "#F5F1E8",
     fontSize: 30,
     fontWeight: "800",
-    marginBottom: 45,
+    marginBottom: 35,
   },
   title: {
     color: "#F5F1E8",
-    fontSize: 34,
+    fontSize: 30,
     fontWeight: "800",
-    lineHeight: 42,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   description: {
     color: "#999999",
     fontSize: 14,
-    lineHeight: 22,
     marginBottom: 30,
   },
   form: {
-    width: "100%",
+    gap: 12,
   },
   label: {
     color: "#F5F1E8",
     fontSize: 13,
     fontWeight: "600",
-    marginBottom: 8,
   },
   input: {
     backgroundColor: "#1E1E1E",
     borderWidth: 1,
     borderColor: "#303030",
     borderRadius: 10,
+    padding: 15,
     color: "#F5F1E8",
-    paddingHorizontal: 15,
-    paddingVertical: 14,
     fontSize: 14,
-    marginBottom: 18,
+    marginBottom: 8,
   },
   button: {
     backgroundColor: "#D97745",
     paddingVertical: 17,
     borderRadius: 10,
     alignItems: "center",
-    marginTop: 5,
+    marginTop: 12,
   },
   buttonText: {
     color: "#121212",
