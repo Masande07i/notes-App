@@ -28,7 +28,7 @@ export default function Index() {
 
         <Pressable
           style={styles.button}
-          onPress={() => router.push("/register")}
+          onPress={() => router.push("/auth/register")}
         >
           <Text style={styles.buttonText}>Get Started</Text>
          
@@ -38,7 +38,7 @@ export default function Index() {
           <Text style={styles.loginText}>
             Already have an account?
           </Text>
-          <Pressable onPress={() => router.push("/login")}>
+          <Pressable onPress={() => router.push("/auth/login")}>
             <Text style={styles.loginButton}>Login</Text>
           </Pressable>
         </View>

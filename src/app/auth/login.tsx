@@ -35,7 +35,7 @@ export default function Login() {
           />
 
           <Pressable style={styles.button}>
-            <Text style={styles.buttonText}>Login ↗</Text>
+            <Text style={styles.buttonText}>Login </Text>
           </Pressable>
         </View>
       </View>
@@ -43,7 +43,7 @@ export default function Login() {
       <View style={styles.registerContainer}>
         <Text style={styles.registerText}>Don't have an account?</Text>
 
-        <Pressable onPress={() => router.push("/register")}>
+        <Pressable onPress={() => router.push("/auth/register")}>
           <Text style={styles.registerButton}>Create one</Text>
         </Pressable>
       </View>

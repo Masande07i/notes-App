@@ -58,7 +58,7 @@ export default function Register() {
       <View style={styles.loginContainer}>
         <Text style={styles.loginText}>Already have an account?</Text>
 
-        <Pressable onPress={() => router.push("/login")}>
+        <Pressable onPress={() => router.push("/auth/login")}>
           <Text style={styles.loginButton}>Login</Text>
         </Pressable>
       </View>
