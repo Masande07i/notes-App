@@ -26,13 +26,12 @@ export default function Index() {
           Keep everything that matters in one place.
         </Text>
 
-        
         <Pressable
           style={styles.button}
           onPress={() => router.push("/register")}
         >
           <Text style={styles.buttonText}>Get Started</Text>
-          <Text style={styles.arrow}>↗</Text>
+         
         </Pressable>
 
         <View style={styles.loginContainer}>
