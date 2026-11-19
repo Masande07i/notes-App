@@ -30,3 +30,7 @@ export const loginUser = async (email: string, password: string) => {
 
   return user;
 };
+
+export const logoutUser = async () => {
+  await AsyncStorage.removeItem("loggedInUser");
+};
