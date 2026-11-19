@@ -1,4 +1,3 @@
-
 import { Text, View, StyleSheet, TextInput, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -126,6 +125,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     gap: 5,
+    
   },
   loginText: {
     color: "#999999",
