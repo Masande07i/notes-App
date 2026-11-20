@@ -1,4 +1,3 @@
-
 import { Text, View, StyleSheet, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -27,18 +26,24 @@ export default function Index() {
         </Text>
 
         <Pressable
-          style={styles.button}
+          style={({ pressed }) => [
+            styles.button,
+            pressed && styles.buttonPressed,
+          ]}
           onPress={() => router.push("/auth/register")}
         >
           <Text style={styles.buttonText}>Get Started</Text>
-         
         </Pressable>
 
         <View style={styles.loginContainer}>
           <Text style={styles.loginText}>
             Already have an account?
           </Text>
-          <Pressable onPress={() => router.push("/auth/login")}>
+
+          <Pressable
+            style={({ pressed }) => pressed && styles.linkPressed}
+            onPress={() => router.push("/auth/login")}
+          >
             <Text style={styles.loginButton}>Login</Text>
           </Pressable>
         </View>
@@ -105,6 +110,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  buttonPressed: {
+    opacity: 0.75,
+    transform: [{ scale: 0.98 }],
+  },
   buttonText: {
     color: "#121212",
     fontSize: 15,
@@ -130,6 +139,9 @@ const styles = StyleSheet.create({
     color: "#D97745",
     fontSize: 13,
     fontWeight: "700",
+  },
+  linkPressed: {
+    opacity: 0.6,
   },
   footer: {
     color: "#555555",

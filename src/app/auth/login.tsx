@@ -28,7 +28,7 @@ export default function Login() {
     try {
       await loginUser(email.trim().toLowerCase(), password);
 
-      router.replace("/home");
+      router.replace("/protected/home");
     } catch (error) {
       Alert.alert("Login Failed", "Invalid email or password.");
     }
@@ -89,9 +89,12 @@ export default function Login() {
         <View style={styles.registerContainer}>
           <Text style={styles.registerText}>Don't have an account?</Text>
 
-          <Pressable onPress={() => router.push("/auth/register")}>
-            <Text style={styles.registerButton}>Create one</Text>
-          </Pressable>
+          <Pressable
+          style={({ pressed }) => pressed && styles.linkPressed}
+          onPress={() => router.push("/auth/register")}
+        >
+          <Text style={styles.registerButton}>Create one</Text>
+        </Pressable>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -115,6 +118,9 @@ const styles = StyleSheet.create({
   opacity: 0.75,
   transform: [{ scale: 0.98 }],
 },
+  linkPressed: {
+    opacity: 0.6,
+  },
   logo: {
     color: "#F5F1E8",
     fontSize: 30,
