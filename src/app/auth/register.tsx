@@ -6,6 +6,7 @@ import {
   TextInput,
   Pressable,
   Alert,
+  ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { registerUser } from "../../services/auth";
@@ -18,37 +19,40 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
- const handleRegister = async () => {
-  if (!username || !email || !password || !confirmPassword) {
-    Alert.alert("Error", "Please fill in all fields.");
-    return;
-  }
+  const handleRegister = async () => {
+    if (!username || !email || !password || !confirmPassword) {
+      Alert.alert("Error", "Please fill in all fields.");
+      return;
+    }
 
-  if (password !== confirmPassword) {
-    Alert.alert("Error", "Passwords do not match.");
-    return;
-  }
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match.");
+      return;
+    }
 
-  try {
-    await registerUser({
-      username,
-      email: email.trim().toLowerCase(),
-      password,
-    });
+    try {
+      await registerUser({
+        username,
+        email: email.trim().toLowerCase(),
+        password,
+      });
 
-    Alert.alert("Success", "Account created successfully.", [
-      {
-        text: "Continue",
-        onPress: () => router.replace("/auth/login"),
-      },
-    ]);
-  } catch (error) {
-    Alert.alert("Error", "Could not create your account.");
-  }
-};
+      Alert.alert("Success", "Account created successfully.", [
+        {
+          text: "Continue",
+          onPress: () => router.replace("/auth/login"),
+        },
+      ]);
+    } catch (error) {
+      Alert.alert("Error", "Could not create your account.");
+    }
+  };
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+    >
       <View>
         <Text style={styles.logo}>note.</Text>
 
@@ -99,12 +103,12 @@ export default function Register() {
             onChangeText={setConfirmPassword}
           />
 
-     <Pressable
-  style={styles.button}
-  onPress={handleRegister}
->
-  <Text style={styles.buttonText}>Create Account</Text>
-</Pressable>
+          <Pressable
+            style={styles.button}
+            onPress={handleRegister}
+          >
+            <Text style={styles.buttonText}>Create Account</Text>
+          </Pressable>
         </View>
       </View>
 
@@ -115,13 +119,13 @@ export default function Register() {
           <Text style={styles.loginButton}>Login</Text>
         </Pressable>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: "#121212",
     paddingHorizontal: 28,
     paddingTop: 65,
