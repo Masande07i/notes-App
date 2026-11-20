@@ -1,59 +1,107 @@
-
-import { Text, View, StyleSheet, TextInput, Pressable } from "react-native";
+import { useState } from "react";
+import {
+  Text,
+  View,
+  StyleSheet,
+  TextInput,
+  Pressable,
+  Alert,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { useRouter } from "expo-router";
+import { loginUser } from "../../services/auth";
 
 export default function Login() {
   const router = useRouter();
 
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Please enter your email and password.");
+      return;
+    }
+
+    try {
+      await loginUser(email.trim().toLowerCase(), password);
+
+      router.replace("/home");
+    } catch (error) {
+      Alert.alert("Login Failed", "Invalid email or password.");
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      <View>
-        <Text style={styles.logo}>note.</Text>
+    <KeyboardAvoidingView
+      style={styles.keyboardContainer}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View>
+          <Text style={styles.logo}>note.</Text>
 
-        <Text style={styles.title}>Welcome back.</Text>
+          <Text style={styles.title}>Welcome back.</Text>
 
-        <Text style={styles.description}>
-          Sign in to continue to your notes.
-        </Text>
+          <Text style={styles.description}>
+            Sign in to continue to your notes.
+          </Text>
 
-        <View style={styles.form}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your email"
-            placeholderTextColor="#666666"
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+          <View style={styles.form}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your email"
+              placeholderTextColor="#666666"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
+            />
 
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your password"
-            placeholderTextColor="#666666"
-            secureTextEntry
-          />
+            <Text style={styles.label}>Password</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your password"
+              placeholderTextColor="#666666"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
 
-          <Pressable style={styles.button}>
-            <Text style={styles.buttonText}>Login </Text>
+            <Pressable
+              style={styles.button}
+              onPress={handleLogin}
+            >
+              <Text style={styles.buttonText}>Login</Text>
+            </Pressable>
+          </View>
+        </View>
+
+        <View style={styles.registerContainer}>
+          <Text style={styles.registerText}>Don't have an account?</Text>
+
+          <Pressable onPress={() => router.push("/auth/register")}>
+            <Text style={styles.registerButton}>Create one</Text>
           </Pressable>
         </View>
-      </View>
-
-      <View style={styles.registerContainer}>
-        <Text style={styles.registerText}>Don't have an account?</Text>
-
-        <Pressable onPress={() => router.push("/auth/register")}>
-          <Text style={styles.registerButton}>Create one</Text>
-        </Pressable>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  keyboardContainer: {
     flex: 1,
+    backgroundColor: "#121212",
+  },
+  container: {
+    flexGrow: 1,
     backgroundColor: "#121212",
     paddingHorizontal: 28,
     paddingTop: 65,
