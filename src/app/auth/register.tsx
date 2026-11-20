@@ -7,6 +7,8 @@ import {
   Pressable,
   Alert,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { registerUser } from "../../services/auth";
@@ -49,81 +51,90 @@ export default function Register() {
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      keyboardShouldPersistTaps="handled"
+    <KeyboardAvoidingView
+      style={styles.keyboardContainer}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View>
-        <Text style={styles.logo}>note.</Text>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View>
+          <Text style={styles.logo}>note.</Text>
 
-        <Text style={styles.title}>Create your account.</Text>
+          <Text style={styles.title}>Create your account.</Text>
 
-        <Text style={styles.description}>
-          Start keeping track of the things that matter.
-        </Text>
+          <Text style={styles.description}>
+            Start keeping track of the things that matter.
+          </Text>
 
-        <View style={styles.form}>
-          <Text style={styles.label}>Username</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your username"
-            placeholderTextColor="#666666"
-            value={username}
-            onChangeText={setUsername}
-          />
+          <View style={styles.form}>
+            <Text style={styles.label}>Username</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your username"
+              placeholderTextColor="#666666"
+              value={username}
+              onChangeText={setUsername}
+            />
 
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your email"
-            placeholderTextColor="#666666"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
-          />
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your email"
+              placeholderTextColor="#666666"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
+            />
 
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your password"
-            placeholderTextColor="#666666"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
+            <Text style={styles.label}>Password</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your password"
+              placeholderTextColor="#666666"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
 
-          <Text style={styles.label}>Confirm Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Confirm your password"
-            placeholderTextColor="#666666"
-            secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-          />
+            <Text style={styles.label}>Confirm Password</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Confirm your password"
+              placeholderTextColor="#666666"
+              secureTextEntry
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
 
-          <Pressable
-            style={styles.button}
-            onPress={handleRegister}
-          >
-            <Text style={styles.buttonText}>Create Account</Text>
+            <Pressable
+              style={styles.button}
+              onPress={handleRegister}
+            >
+              <Text style={styles.buttonText}>Create Account</Text>
+            </Pressable>
+          </View>
+        </View>
+
+        <View style={styles.loginContainer}>
+          <Text style={styles.loginText}>Already have an account?</Text>
+
+          <Pressable onPress={() => router.push("/auth/login")}>
+            <Text style={styles.loginButton}>Login</Text>
           </Pressable>
         </View>
-      </View>
-
-      <View style={styles.loginContainer}>
-        <Text style={styles.loginText}>Already have an account?</Text>
-
-        <Pressable onPress={() => router.push("/auth/login")}>
-          <Text style={styles.loginButton}>Login</Text>
-        </Pressable>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardContainer: {
+    flex: 1,
+    backgroundColor: "#121212",
+  },
   container: {
     flexGrow: 1,
     backgroundColor: "#121212",
