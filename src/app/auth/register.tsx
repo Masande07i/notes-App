@@ -1,8 +1,51 @@
-import { Text, View, StyleSheet, TextInput, Pressable } from "react-native";
+import { useState } from "react";
+import {
+  Text,
+  View,
+  StyleSheet,
+  TextInput,
+  Pressable,
+  Alert,
+} from "react-native";
 import { useRouter } from "expo-router";
+import { registerUser } from "../../services/auth";
 
 export default function Register() {
   const router = useRouter();
+
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+ const handleRegister = async () => {
+  if (!username || !email || !password || !confirmPassword) {
+    Alert.alert("Error", "Please fill in all fields.");
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    Alert.alert("Error", "Passwords do not match.");
+    return;
+  }
+
+  try {
+    await registerUser({
+      username,
+      email: email.trim().toLowerCase(),
+      password,
+    });
+
+    Alert.alert("Success", "Account created successfully.", [
+      {
+        text: "Continue",
+        onPress: () => router.replace("/auth/login"),
+      },
+    ]);
+  } catch (error) {
+    Alert.alert("Error", "Could not create your account.");
+  }
+};
 
   return (
     <View style={styles.container}>
@@ -21,6 +64,8 @@ export default function Register() {
             style={styles.input}
             placeholder="Enter your username"
             placeholderTextColor="#666666"
+            value={username}
+            onChangeText={setUsername}
           />
 
           <Text style={styles.label}>Email</Text>
@@ -30,6 +75,8 @@ export default function Register() {
             placeholderTextColor="#666666"
             keyboardType="email-address"
             autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
           />
 
           <Text style={styles.label}>Password</Text>
@@ -38,6 +85,8 @@ export default function Register() {
             placeholder="Enter your password"
             placeholderTextColor="#666666"
             secureTextEntry
+            value={password}
+            onChangeText={setPassword}
           />
 
           <Text style={styles.label}>Confirm Password</Text>
@@ -46,11 +95,16 @@ export default function Register() {
             placeholder="Confirm your password"
             placeholderTextColor="#666666"
             secureTextEntry
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
           />
 
-          <Pressable style={styles.button}>
-            <Text style={styles.buttonText}>Create Account </Text>
-          </Pressable>
+     <Pressable
+  style={styles.button}
+  onPress={handleRegister}
+>
+  <Text style={styles.buttonText}>Create Account</Text>
+</Pressable>
         </View>
       </View>
 
@@ -125,7 +179,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     gap: 5,
-    
   },
   loginText: {
     color: "#999999",
