@@ -74,12 +74,15 @@ export default function Login() {
               onChangeText={setPassword}
             />
 
-            <Pressable
-              style={styles.button}
-              onPress={handleLogin}
-            >
-              <Text style={styles.buttonText}>Login</Text>
-            </Pressable>
+           <Pressable
+          style={({ pressed }) => [
+            styles.button,
+            pressed && styles.buttonPressed,
+          ]}
+          onPress={handleLogin}
+        >
+          <Text style={styles.buttonText}>Login</Text>
+        </Pressable>
           </View>
         </View>
 
@@ -108,6 +111,10 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
     justifyContent: "space-between",
   },
+  buttonPressed: {
+  opacity: 0.75,
+  transform: [{ scale: 0.98 }],
+},
   logo: {
     color: "#F5F1E8",
     fontSize: 30,
