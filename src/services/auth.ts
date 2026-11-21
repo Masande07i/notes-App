@@ -1,6 +1,6 @@
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import bcrypt from "bcryptjs";
-
 
 export type User = {
   username: string;
@@ -8,11 +8,17 @@ export type User = {
   password: string;
 };
 
-
 const USER_KEY = "user";
 
 export const registerUser = async (user: User) => {
-  await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
+  const hashedPassword = await bcrypt.hash(user.password, 10);
+
+  const newUser = {
+    ...user,
+    password: hashedPassword,
+  };
+
+  await AsyncStorage.setItem(USER_KEY, JSON.stringify(newUser));
 };
 
 export const loginUser = async (email: string, password: string) => {
@@ -24,7 +30,9 @@ export const loginUser = async (email: string, password: string) => {
 
   const user: User = JSON.parse(savedUser);
 
-  if (user.email !== email || user.password !== password) {
+  const passwordMatch = await bcrypt.compare(password, user.password);
+
+  if (user.email !== email || !passwordMatch) {
     throw new Error("Invalid email or password.");
   }
 
