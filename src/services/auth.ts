@@ -31,6 +31,16 @@ export const loginUser = async (email: string, password: string) => {
   return user;
 };
 
+export const getCurrentUser = async () => {
+  const savedUser = await AsyncStorage.getItem("loggedInUser");
+
+  if (!savedUser) {
+    return null;
+  }
+
+  return JSON.parse(savedUser) as User;
+};
+
 export const logoutUser = async () => {
   await AsyncStorage.removeItem("loggedInUser");
 };
