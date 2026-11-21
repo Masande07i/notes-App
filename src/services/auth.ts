@@ -1,4 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import bcrypt from "bcryptjs";
+
 
 export type User = {
   username: string;

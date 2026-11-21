@@ -6,6 +6,8 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 
 //npx expo install @react-native-async-storage/async-storage
 
+npm install bcryptjs
+
 1. Install dependencies
 
    ```bash
