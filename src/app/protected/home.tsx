@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import {
   Text,
@@ -5,6 +6,7 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -27,6 +29,7 @@ export default function Home() {
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [notes, setNotes] = useState<Note[]>([]);
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
 
   const loadNotes = async () => {
     const savedNotes = await AsyncStorage.getItem("notes");
@@ -50,28 +53,74 @@ export default function Home() {
     notes: string;
     category: NoteCategory;
   }) => {
-    const savedNotes = await AsyncStorage.getItem("notes");
+    let updatedNotes: Note[];
 
-    const currentNotes: Note[] = savedNotes
-      ? JSON.parse(savedNotes)
-      : [];
+    if (selectedNote) {
+      updatedNotes = notes.map((item) =>
+        item.id === selectedNote.id
+          ? {
+              ...item,
+              title: note.title,
+              notes: note.notes,
+              category: note.category,
+              editedAt: new Date().toISOString(),
+            }
+          : item
+      );
+    } else {
+      const newNote: Note = {
+        id: Date.now().toString(),
+        title: note.title,
+        notes: note.notes,
+        category: note.category,
+        dateAdded: new Date().toISOString(),
+      };
 
-    const newNote: Note = {
-      id: Date.now().toString(),
-      title: note.title,
-      notes: note.notes,
-      category: note.category,
-      dateAdded: new Date().toISOString(),
-    };
+      updatedNotes = [...notes, newNote];
+    }
 
-    const updatedNotes = [...currentNotes, newNote];
-
-    await AsyncStorage.setItem(
-      "notes",
-      JSON.stringify(updatedNotes)
-    );
+    await AsyncStorage.setItem("notes", JSON.stringify(updatedNotes));
 
     setNotes(updatedNotes);
+    setSelectedNote(null);
+  };
+
+  const handleEditNote = (note: Note) => {
+    setSelectedNote(note);
+    setIsModalVisible(true);
+  };
+
+  const handleDeleteNote = (id: string) => {
+    Alert.alert(
+      "Delete Note",
+      "Are you sure you want to delete this note?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            deleteNote(id);
+          },
+        },
+      ]
+    );
+  };
+
+  const deleteNote = async (id: string) => {
+    const updatedNotes = notes.filter((note) => note.id !== id);
+
+    await AsyncStorage.setItem("notes", JSON.stringify(updatedNotes));
+
+    setNotes(updatedNotes);
+  };
+
+  const handleAddNote = () => {
+    setSelectedNote(null);
+    setIsModalVisible(true);
   };
 
   return (
@@ -93,7 +142,7 @@ export default function Home() {
             styles.button,
             pressed && styles.buttonPressed,
           ]}
-          onPress={() => setIsModalVisible(true)}
+          onPress={handleAddNote}
         >
           <Text style={styles.buttonText}>+ Add Note</Text>
         </Pressable>
@@ -122,6 +171,28 @@ export default function Home() {
               <Text style={styles.date}>
                 Added {new Date(note.dateAdded).toLocaleDateString()}
               </Text>
+
+              {note.editedAt && (
+                <Text style={styles.date}>
+                  Edited {new Date(note.editedAt).toLocaleString()}
+                </Text>
+              )}
+
+              <View style={styles.noteActions}>
+                <Pressable
+                  style={styles.editButton}
+                  onPress={() => handleEditNote(note)}
+                >
+                  <Text style={styles.editText}>Edit</Text>
+                </Pressable>
+
+                <Pressable
+                  style={styles.deleteButton}
+                  onPress={() => handleDeleteNote(note.id)}
+                >
+                  <Text style={styles.deleteText}>Delete</Text>
+                </Pressable>
+              </View>
             </View>
           ))}
         </View>
@@ -141,6 +212,7 @@ export default function Home() {
         visible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
         onSave={handleSaveNote}
+        initialNote={selectedNote || undefined}
       />
     </View>
   );
@@ -232,6 +304,36 @@ const styles = StyleSheet.create({
   date: {
     color: "#777777",
     fontSize: 11,
+    marginBottom: 5,
+  },
+  noteActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 10,
+    marginTop: 15,
+  },
+  editButton: {
+    borderWidth: 1,
+    borderColor: "#D97745",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 7,
+  },
+  editText: {
+    color: "#D97745",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  deleteButton: {
+    backgroundColor: "#35201C",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 7,
+  },
+  deleteText: {
+    color: "#E07865",
+    fontSize: 12,
+    fontWeight: "700",
   },
   logoutButton: {
     paddingVertical: 15,
