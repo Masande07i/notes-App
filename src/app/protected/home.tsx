@@ -32,6 +32,7 @@ export default function Home() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [searchText, setSearchText] = useState("");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
 
   const loadNotes = async () => {
     const savedNotes = await AsyncStorage.getItem("notes");
@@ -125,11 +126,25 @@ export default function Home() {
     setIsModalVisible(true);
   };
 
-  const filteredNotes = notes.filter(
-    (note) =>
-      note.title.toLowerCase().includes(searchText.toLowerCase()) ||
-      note.notes.toLowerCase().includes(searchText.toLowerCase())
-  );
+  const filteredNotes = notes
+    .filter(
+      (note) =>
+        note.title.toLowerCase().includes(searchText.toLowerCase()) ||
+        note.notes.toLowerCase().includes(searchText.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (sortOrder === "newest") {
+        return (
+          new Date(b.dateAdded).getTime() -
+          new Date(a.dateAdded).getTime()
+        );
+      }
+
+      return (
+        new Date(a.dateAdded).getTime() -
+        new Date(b.dateAdded).getTime()
+      );
+    });
 
   return (
     <View style={styles.container}>
@@ -167,6 +182,44 @@ export default function Home() {
             value={searchText}
             onChangeText={setSearchText}
           />
+
+          <View style={styles.sortContainer}>
+            <Text style={styles.sortLabel}>Sort by:</Text>
+
+            <Pressable
+              style={[
+                styles.sortButton,
+                sortOrder === "newest" && styles.activeSortButton,
+              ]}
+              onPress={() => setSortOrder("newest")}
+            >
+              <Text
+                style={[
+                  styles.sortText,
+                  sortOrder === "newest" && styles.activeSortText,
+                ]}
+              >
+                Newest
+              </Text>
+            </Pressable>
+
+            <Pressable
+              style={[
+                styles.sortButton,
+                sortOrder === "oldest" && styles.activeSortButton,
+              ]}
+              onPress={() => setSortOrder("oldest")}
+            >
+              <Text
+                style={[
+                  styles.sortText,
+                  sortOrder === "oldest" && styles.activeSortText,
+                ]}
+              >
+                Oldest
+              </Text>
+            </Pressable>
+          </View>
 
           {filteredNotes.length === 0 ? (
             <Text style={styles.emptyText}>
@@ -298,6 +351,35 @@ const styles = StyleSheet.create({
     color: "#F5F1E8",
     fontSize: 14,
     marginBottom: 18,
+  },
+  sortContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 18,
+  },
+  sortLabel: {
+    color: "#999999",
+    fontSize: 13,
+  },
+  sortButton: {
+    borderWidth: 1,
+    borderColor: "#303030",
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    borderRadius: 7,
+  },
+  activeSortButton: {
+    backgroundColor: "#D97745",
+    borderColor: "#D97745",
+  },
+  sortText: {
+    color: "#999999",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  activeSortText: {
+    color: "#121212",
   },
   emptyText: {
     color: "#999999",
