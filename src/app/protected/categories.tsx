@@ -6,10 +6,14 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
+  Alert,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { NoteCategory } from "../../components/addNoteModal";
+import { Ionicons } from "@expo/vector-icons";
+import AddNoteModal, {
+  NoteCategory,
+} from "../../components/addNoteModal";
 
 type Note = {
   id: string;
@@ -27,6 +31,8 @@ export default function Categories() {
     useState<NoteCategory>("Work");
 
   const [notes, setNotes] = useState<Note[]>([]);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
 
   const categories: NoteCategory[] = ["Work", "Study", "Personal"];
 
@@ -47,6 +53,64 @@ export default function Categories() {
       setSelectedCategory(category as NoteCategory);
     }
   }, [category]);
+
+  const handleEditNote = (note: Note) => {
+    setSelectedNote(note);
+    setIsModalVisible(true);
+  };
+
+  const handleSaveNote = async (updatedNote: {
+    title: string;
+    notes: string;
+    category: NoteCategory;
+  }) => {
+    if (!selectedNote) return;
+
+    const updatedNotes = notes.map((note) =>
+      note.id === selectedNote.id
+        ? {
+            ...note,
+            title: updatedNote.title,
+            notes: updatedNote.notes,
+            category: updatedNote.category,
+            editedAt: new Date().toISOString(),
+          }
+        : note
+    );
+
+    await AsyncStorage.setItem("notes", JSON.stringify(updatedNotes));
+    setNotes(updatedNotes);
+    setSelectedNote(null);
+  };
+
+  const handleDeleteNote = (id: string) => {
+    Alert.alert(
+      "Delete Note",
+      "Are you sure you want to delete this note?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            const updatedNotes = notes.filter(
+              (note) => note.id !== id
+            );
+
+            await AsyncStorage.setItem(
+              "notes",
+              JSON.stringify(updatedNotes)
+            );
+
+            setNotes(updatedNotes);
+          },
+        },
+      ]
+    );
+  };
 
   const filteredNotes = notes.filter(
     (note) =>
@@ -103,9 +167,35 @@ export default function Categories() {
         ) : (
           filteredNotes.map((note) => (
             <View key={note.id} style={styles.noteCard}>
-              <Text style={styles.noteTitle}>
-                {note.title || "Untitled Note"}
-              </Text>
+              <View style={styles.noteHeader}>
+                <Text style={styles.noteTitle}>
+                  {note.title || "Untitled Note"}
+                </Text>
+
+                <View style={styles.actions}>
+                  <Pressable
+                    onPress={() => handleEditNote(note)}
+                    style={styles.iconButton}
+                  >
+                    <Ionicons
+                      name="create-outline"
+                      size={21}
+                      color="#D97745"
+                    />
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => handleDeleteNote(note.id)}
+                    style={styles.iconButton}
+                  >
+                    <Ionicons
+                      name="trash-outline"
+                      size={21}
+                      color="#D97745"
+                    />
+                  </Pressable>
+                </View>
+              </View>
 
               <Text style={styles.noteText}>{note.notes}</Text>
 
@@ -115,13 +205,31 @@ export default function Categories() {
 
               {note.editedAt && (
                 <Text style={styles.date}>
-                  Edited {new Date(note.editedAt).toLocaleString()}
+                  Edited {new Date(note.editedAt).toLocaleDateString()}
                 </Text>
               )}
             </View>
           ))
         )}
       </ScrollView>
+
+      <AddNoteModal
+        visible={isModalVisible}
+        onClose={() => {
+          setIsModalVisible(false);
+          setSelectedNote(null);
+        }}
+        onSave={handleSaveNote}
+        initialNote={
+          selectedNote
+            ? {
+                title: selectedNote.title,
+                notes: selectedNote.notes,
+                category: selectedNote.category,
+              }
+            : undefined
+        }
+      />
     </View>
   );
 }
@@ -199,11 +307,25 @@ const styles = StyleSheet.create({
     padding: 18,
     marginBottom: 12,
   },
+  noteHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
   noteTitle: {
     color: "#F5F1E8",
     fontSize: 16,
     fontWeight: "700",
-    marginBottom: 12,
+    flex: 1,
+    marginRight: 10,
+  },
+  actions: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  iconButton: {
+    padding: 5,
   },
   noteText: {
     color: "#CCCCCC",

@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Text,
   View,
@@ -25,28 +25,20 @@ type Note = {
 export default function Home() {
   const router = useRouter();
 
-  const [notes, setNotes] = useState<Note[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   const categories: NoteCategory[] = ["Work", "Study", "Personal"];
-
-  const loadNotes = async () => {
-    const savedNotes = await AsyncStorage.getItem("notes");
-
-    if (savedNotes) {
-      setNotes(JSON.parse(savedNotes));
-    }
-  };
-
-  useEffect(() => {
-    loadNotes();
-  }, []);
 
   const handleSaveNote = async (note: {
     title: string;
     notes: string;
     category: NoteCategory;
   }) => {
+    const savedNotes = await AsyncStorage.getItem("notes");
+    const existingNotes: Note[] = savedNotes
+      ? JSON.parse(savedNotes)
+      : [];
+
     const newNote: Note = {
       id: Date.now().toString(),
       title: note.title,
@@ -55,19 +47,10 @@ export default function Home() {
       dateAdded: new Date().toISOString(),
     };
 
-    const updatedNotes = [...notes, newNote];
+    const updatedNotes = [...existingNotes, newNote];
 
     await AsyncStorage.setItem("notes", JSON.stringify(updatedNotes));
-    setNotes(updatedNotes);
   };
-
-  const recentNotes = [...notes]
-    .sort(
-      (a, b) =>
-        new Date(b.dateAdded).getTime() -
-        new Date(a.dateAdded).getTime()
-    )
-    .slice(0, 3);
 
   return (
     <View style={styles.container}>
@@ -126,52 +109,6 @@ export default function Home() {
             ))}
           </View>
         </View>
-
-        {/* <View style={styles.section}>
-          <View style={styles.notesHeader}>
-            <View>
-              <Text style={styles.sectionTitle}>Recent notes</Text>
-              <Text style={styles.sectionDescription}>
-                Your latest thoughts.
-              </Text>
-            </View>
-
-            <Pressable onPress={() => router.push("/protected/all-notes")}>
-              <Text style={styles.viewAllText}>View all</Text>
-            </Pressable>
-          </View>
-
-          {recentNotes.length === 0 ? (
-            <View style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>No notes yet.</Text>
-              <Text style={styles.emptyText}>
-                Your recent notes will appear here.
-              </Text>
-            </View>
-          ) : (
-            recentNotes.map((note) => (
-              <View key={note.id} style={styles.noteCard}>
-                <View style={styles.noteHeader}>
-                  <Text style={styles.noteTitle}>
-                    {note.title || "Untitled Note"}
-                  </Text>
-
-                  <Text style={styles.categoryLabel}>
-                    {note.category}
-                  </Text>
-                </View>
-
-                <Text style={styles.noteText} numberOfLines={2}>
-                  {note.notes}
-                </Text>
-
-                <Text style={styles.date}>
-                  {new Date(note.dateAdded).toLocaleDateString()}
-                </Text>
-              </View> */}
-            {/* ))
-          )} */}
-        {/* </View> */}
       </ScrollView>
 
       <AddNoteModal
@@ -272,70 +209,5 @@ const styles = StyleSheet.create({
     color: "#D97745",
     fontSize: 13,
     fontWeight: "700",
-  },
-  notesHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  viewAllText: {
-    color: "#D97745",
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  emptyCard: {
-    backgroundColor: "#1E1E1E",
-    borderRadius: 10,
-    padding: 22,
-    borderWidth: 1,
-    borderColor: "#303030",
-    alignItems: "center",
-  },
-  emptyTitle: {
-    color: "#F5F1E8",
-    fontSize: 15,
-    fontWeight: "700",
-    marginBottom: 7,
-  },
-  emptyText: {
-    color: "#999999",
-    fontSize: 13,
-  },
-  noteCard: {
-    backgroundColor: "#1E1E1E",
-    borderWidth: 1,
-    borderColor: "#303030",
-    borderRadius: 10,
-    padding: 16,
-    marginBottom: 12,
-  },
-  noteHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  noteTitle: {
-    color: "#F5F1E8",
-    fontSize: 15,
-    fontWeight: "700",
-    flex: 1,
-    marginRight: 10,
-  },
-  categoryLabel: {
-    color: "#D97745",
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  noteText: {
-    color: "#CCCCCC",
-    fontSize: 13,
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  date: {
-    color: "#777777",
-    fontSize: 11,
   },
 });
