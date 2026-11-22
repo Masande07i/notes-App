@@ -6,12 +6,9 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
-  Alert,
-  TextInput,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { logoutUser } from "../../services/auth";
 import AddNoteModal, {
   NoteCategory,
 } from "../../components/addNoteModal";
@@ -28,11 +25,10 @@ type Note = {
 export default function Home() {
   const router = useRouter();
 
-  const [isModalVisible, setIsModalVisible] = useState(false);
   const [notes, setNotes] = useState<Note[]>([]);
-  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-  const [searchText, setSearchText] = useState("");
-  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  const categories: NoteCategory[] = ["Work", "Study", "Personal"];
 
   const loadNotes = async () => {
     const savedNotes = await AsyncStorage.getItem("notes");
@@ -46,105 +42,32 @@ export default function Home() {
     loadNotes();
   }, []);
 
-  const handleLogout = async () => {
-    await logoutUser();
-    router.replace("/");
-  };
-
   const handleSaveNote = async (note: {
     title: string;
     notes: string;
     category: NoteCategory;
   }) => {
-    let updatedNotes: Note[];
+    const newNote: Note = {
+      id: Date.now().toString(),
+      title: note.title,
+      notes: note.notes,
+      category: note.category,
+      dateAdded: new Date().toISOString(),
+    };
 
-    if (selectedNote) {
-      updatedNotes = notes.map((item) =>
-        item.id === selectedNote.id
-          ? {
-              ...item,
-              title: note.title,
-              notes: note.notes,
-              category: note.category,
-              editedAt: new Date().toISOString(),
-            }
-          : item
-      );
-    } else {
-      const newNote: Note = {
-        id: Date.now().toString(),
-        title: note.title,
-        notes: note.notes,
-        category: note.category,
-        dateAdded: new Date().toISOString(),
-      };
-
-      updatedNotes = [...notes, newNote];
-    }
+    const updatedNotes = [...notes, newNote];
 
     await AsyncStorage.setItem("notes", JSON.stringify(updatedNotes));
-
-    setNotes(updatedNotes);
-    setSelectedNote(null);
-  };
-
-  const handleEditNote = (note: Note) => {
-    setSelectedNote(note);
-    setIsModalVisible(true);
-  };
-
-  const handleDeleteNote = (id: string) => {
-    Alert.alert(
-      "Delete Note",
-      "Are you sure you want to delete this note?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            deleteNote(id);
-          },
-        },
-      ]
-    );
-  };
-
-  const deleteNote = async (id: string) => {
-    const updatedNotes = notes.filter((note) => note.id !== id);
-
-    await AsyncStorage.setItem("notes", JSON.stringify(updatedNotes));
-
     setNotes(updatedNotes);
   };
 
-  const handleAddNote = () => {
-    setSelectedNote(null);
-    setIsModalVisible(true);
-  };
-
-  const filteredNotes = notes
-    .filter(
-      (note) =>
-        note.title.toLowerCase().includes(searchText.toLowerCase()) ||
-        note.notes.toLowerCase().includes(searchText.toLowerCase())
+  const recentNotes = [...notes]
+    .sort(
+      (a, b) =>
+        new Date(b.dateAdded).getTime() -
+        new Date(a.dateAdded).getTime()
     )
-    .sort((a, b) => {
-      if (sortOrder === "newest") {
-        return (
-          new Date(b.dateAdded).getTime() -
-          new Date(a.dateAdded).getTime()
-        );
-      }
-
-      return (
-        new Date(a.dateAdded).getTime() -
-        new Date(b.dateAdded).getTime()
-      );
-    });
+    .slice(0, 3);
 
   return (
     <View style={styles.container}>
@@ -152,140 +75,109 @@ export default function Home() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.logo}>note.</Text>
+        <View style={styles.header}>
+          <Text style={styles.logo}>note.</Text>
 
-        <Text style={styles.title}>Your notes.</Text>
+          <Pressable onPress={() => router.push("/protected/profile")}>
+            <Text style={styles.profileText}>Profile</Text>
+          </Pressable>
+        </View>
 
-        <Text style={styles.description}>
-          Your personal space for everything worth remembering.
-        </Text>
+        <View style={styles.welcomeSection}>
+          <Text style={styles.title}>Welcome back.</Text>
+          <Text style={styles.description}>
+            What would you like to note today?
+          </Text>
+        </View>
 
         <Pressable
           style={({ pressed }) => [
-            styles.button,
+            styles.addButton,
             pressed && styles.buttonPressed,
           ]}
-          onPress={handleAddNote}
+          onPress={() => setIsModalVisible(true)}
         >
-          <Text style={styles.buttonText}>+ Add Note</Text>
+          <Text style={styles.addButtonText}>+ Create a Note</Text>
         </Pressable>
 
-        <View style={styles.notesSection}>
-          <Text style={styles.sectionTitle}>
-            {notes.length === 0 ? "No notes yet." : "Your saved notes"}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Your categories</Text>
+          <Text style={styles.sectionDescription}>
+            Keep your thoughts organised.
           </Text>
 
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search your notes..."
-            placeholderTextColor="#777777"
-            value={searchText}
-            onChangeText={setSearchText}
-          />
-
-          <View style={styles.sortContainer}>
-            <Text style={styles.sortLabel}>Sort by:</Text>
-
-            <Pressable
-              style={[
-                styles.sortButton,
-                sortOrder === "newest" && styles.activeSortButton,
-              ]}
-              onPress={() => setSortOrder("newest")}
-            >
-              <Text
-                style={[
-                  styles.sortText,
-                  sortOrder === "newest" && styles.activeSortText,
+          <View style={styles.categories}>
+            {categories.map((category) => (
+              <Pressable
+                key={category}
+                style={({ pressed }) => [
+                  styles.categoryCard,
+                  pressed && styles.cardPressed,
                 ]}
+                onPress={() =>
+                  router.push({
+                    pathname: "/protected/categories",
+                    params: { category },
+                  })
+                }
               >
-                Newest
-              </Text>
-            </Pressable>
+                <Text style={styles.categoryText}>{category}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
 
-            <Pressable
-              style={[
-                styles.sortButton,
-                sortOrder === "oldest" && styles.activeSortButton,
-              ]}
-              onPress={() => setSortOrder("oldest")}
-            >
-              <Text
-                style={[
-                  styles.sortText,
-                  sortOrder === "oldest" && styles.activeSortText,
-                ]}
-              >
-                Oldest
+        <View style={styles.section}>
+          <View style={styles.notesHeader}>
+            <View>
+              <Text style={styles.sectionTitle}>Recent notes</Text>
+              <Text style={styles.sectionDescription}>
+                Your latest thoughts.
               </Text>
+            </View>
+
+            <Pressable onPress={() => router.push("/protected/all-notes")}>
+              <Text style={styles.viewAllText}>View all</Text>
             </Pressable>
           </View>
 
-          {filteredNotes.length === 0 ? (
-            <Text style={styles.emptyText}>
-              {notes.length === 0
-                ? "Add your first note to get started."
-                : "No notes found."}
-            </Text>
+          {recentNotes.length === 0 ? (
+            <View style={styles.emptyCard}>
+              <Text style={styles.emptyTitle}>No notes yet.</Text>
+              <Text style={styles.emptyText}>
+                Your recent notes will appear here.
+              </Text>
+            </View>
           ) : (
-            filteredNotes.map((note) => (
+            recentNotes.map((note) => (
               <View key={note.id} style={styles.noteCard}>
                 <View style={styles.noteHeader}>
                   <Text style={styles.noteTitle}>
                     {note.title || "Untitled Note"}
                   </Text>
 
-                  <Text style={styles.category}>{note.category}</Text>
+                  <Text style={styles.categoryLabel}>
+                    {note.category}
+                  </Text>
                 </View>
 
-                <Text style={styles.noteText}>{note.notes}</Text>
-
-                <Text style={styles.date}>
-                  Added {new Date(note.dateAdded).toLocaleDateString()}
+                <Text style={styles.noteText} numberOfLines={2}>
+                  {note.notes}
                 </Text>
 
-                {note.editedAt && (
-                  <Text style={styles.date}>
-                    Edited {new Date(note.editedAt).toLocaleString()}
-                  </Text>
-                )}
-
-                <View style={styles.noteActions}>
-                  <Pressable
-                    style={styles.editButton}
-                    onPress={() => handleEditNote(note)}
-                  >
-                    <Text style={styles.editText}>Edit</Text>
-                  </Pressable>
-
-                  <Pressable
-                    style={styles.deleteButton}
-                    onPress={() => handleDeleteNote(note.id)}
-                  >
-                    <Text style={styles.deleteText}>Delete</Text>
-                  </Pressable>
-                </View>
+                <Text style={styles.date}>
+                  {new Date(note.dateAdded).toLocaleDateString()}
+                </Text>
               </View>
             ))
           )}
         </View>
-
-        <Pressable
-          style={({ pressed }) => [
-            styles.logoutButton,
-            pressed && styles.buttonPressed,
-          ]}
-          onPress={handleLogout}
-        >
-          <Text style={styles.logoutText}>Logout</Text>
-        </Pressable>
       </ScrollView>
 
       <AddNoteModal
         visible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
         onSave={handleSaveNote}
-        initialNote={selectedNote || undefined}
       />
     </View>
   );
@@ -297,170 +189,153 @@ const styles = StyleSheet.create({
     backgroundColor: "#121212",
   },
   content: {
-    padding: 28,
-    paddingTop: 60,
+    padding: 25,
+    paddingTop: 55,
     paddingBottom: 40,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 45,
   },
   logo: {
     color: "#D97745",
-    fontSize: 30,
+    fontSize: 29,
     fontWeight: "800",
-    marginBottom: 30,
+  },
+  profileText: {
+    color: "#F5F1E8",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  welcomeSection: {
+    marginBottom: 25,
   },
   title: {
     color: "#F5F1E8",
     fontSize: 32,
     fontWeight: "800",
-    marginBottom: 10,
+    marginBottom: 9,
   },
   description: {
     color: "#999999",
     fontSize: 14,
-    marginBottom: 30,
   },
-  button: {
+  addButton: {
     backgroundColor: "#D97745",
-    paddingVertical: 15,
+    paddingVertical: 17,
     borderRadius: 10,
     alignItems: "center",
+  },
+  addButtonText: {
+    color: "#121212",
+    fontSize: 15,
+    fontWeight: "700",
   },
   buttonPressed: {
     opacity: 0.75,
     transform: [{ scale: 0.98 }],
   },
-  buttonText: {
-    color: "#121212",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  notesSection: {
-    marginTop: 35,
+  section: {
+    marginTop: 40,
   },
   sectionTitle: {
     color: "#F5F1E8",
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: "700",
-    marginBottom: 15,
+    marginBottom: 7,
   },
-  searchInput: {
+  sectionDescription: {
+    color: "#999999",
+    fontSize: 13,
+    marginBottom: 18,
+  },
+  categories: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  categoryCard: {
+    flex: 1,
     backgroundColor: "#1E1E1E",
     borderWidth: 1,
     borderColor: "#303030",
     borderRadius: 10,
-    padding: 14,
-    color: "#F5F1E8",
-    fontSize: 14,
-    marginBottom: 18,
-  },
-  sortContainer: {
-    flexDirection: "row",
+    paddingVertical: 20,
     alignItems: "center",
-    gap: 10,
-    marginBottom: 18,
   },
-  sortLabel: {
-    color: "#999999",
-    fontSize: 13,
-  },
-  sortButton: {
-    borderWidth: 1,
-    borderColor: "#303030",
-    paddingVertical: 7,
-    paddingHorizontal: 14,
-    borderRadius: 7,
-  },
-  activeSortButton: {
-    backgroundColor: "#D97745",
+  cardPressed: {
     borderColor: "#D97745",
+    opacity: 0.8,
   },
-  sortText: {
-    color: "#999999",
-    fontSize: 12,
+  categoryText: {
+    color: "#D97745",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  notesHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  viewAllText: {
+    color: "#D97745",
+    fontSize: 13,
     fontWeight: "600",
   },
-  activeSortText: {
-    color: "#121212",
+  emptyCard: {
+    backgroundColor: "#1E1E1E",
+    borderRadius: 10,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: "#303030",
+    alignItems: "center",
+  },
+  emptyTitle: {
+    color: "#F5F1E8",
+    fontSize: 15,
+    fontWeight: "700",
+    marginBottom: 7,
   },
   emptyText: {
     color: "#999999",
-    fontSize: 14,
-    textAlign: "center",
-    paddingVertical: 20,
+    fontSize: 13,
   },
   noteCard: {
     backgroundColor: "#1E1E1E",
     borderWidth: 1,
     borderColor: "#303030",
-    borderRadius: 12,
-    padding: 18,
+    borderRadius: 10,
+    padding: 16,
     marginBottom: 12,
   },
   noteHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 12,
+    alignItems: "center",
+    marginBottom: 10,
   },
   noteTitle: {
     color: "#F5F1E8",
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: "700",
     flex: 1,
     marginRight: 10,
   },
-  category: {
+  categoryLabel: {
     color: "#D97745",
     fontSize: 11,
     fontWeight: "700",
   },
   noteText: {
     color: "#CCCCCC",
-    fontSize: 14,
-    lineHeight: 21,
-    marginBottom: 15,
+    fontSize: 13,
+    lineHeight: 20,
+    marginBottom: 12,
   },
   date: {
     color: "#777777",
     fontSize: 11,
-    marginBottom: 5,
-  },
-  noteActions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 10,
-    marginTop: 15,
-  },
-  editButton: {
-    borderWidth: 1,
-    borderColor: "#D97745",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 7,
-  },
-  editText: {
-    color: "#D97745",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  deleteButton: {
-    backgroundColor: "#35201C",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 7,
-  },
-  deleteText: {
-    color: "#E07865",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  logoutButton: {
-    paddingVertical: 15,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  logoutText: {
-    color: "#999999",
-    fontSize: 14,
-    fontWeight: "600",
   },
 });
