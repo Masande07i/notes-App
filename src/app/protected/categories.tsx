@@ -7,6 +7,7 @@ import {
   Pressable,
   ScrollView,
   Alert,
+  TextInput,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -31,6 +32,8 @@ export default function Categories() {
     useState<NoteCategory>("Work");
 
   const [notes, setNotes] = useState<Note[]>([]);
+  const [searchText, setSearchText] = useState("");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
 
@@ -112,11 +115,29 @@ export default function Categories() {
     );
   };
 
-  const filteredNotes = notes.filter(
-    (note) =>
-      note.category?.trim().toLowerCase() ===
-      selectedCategory.toLowerCase()
-  );
+  const filteredNotes = notes
+    .filter(
+      (note) =>
+        note.category?.trim().toLowerCase() ===
+          selectedCategory.toLowerCase() &&
+        (
+          note.title.toLowerCase().includes(searchText.toLowerCase()) ||
+          note.notes.toLowerCase().includes(searchText.toLowerCase())
+        )
+    )
+    .sort((a, b) => {
+      if (sortOrder === "newest") {
+        return (
+          new Date(b.dateAdded).getTime() -
+          new Date(a.dateAdded).getTime()
+        );
+      }
+
+      return (
+        new Date(a.dateAdded).getTime() -
+        new Date(b.dateAdded).getTime()
+      );
+    });
 
   return (
     <View style={styles.container}>
@@ -141,7 +162,10 @@ export default function Categories() {
                 selectedCategory === categoryName &&
                   styles.selectedCategory,
               ]}
-              onPress={() => setSelectedCategory(categoryName)}
+              onPress={() => {
+                setSelectedCategory(categoryName);
+                setSearchText("");
+              }}
             >
               <Text
                 style={[
@@ -160,9 +184,66 @@ export default function Categories() {
           {selectedCategory} notes
         </Text>
 
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search your notes..."
+          placeholderTextColor="#777777"
+          value={searchText}
+          onChangeText={setSearchText}
+        />
+
+        <View style={styles.sortContainer}>
+          <Text style={styles.sortLabel}>Sort by:</Text>
+
+          <Pressable
+            style={[
+              styles.sortButton,
+              sortOrder === "newest" && styles.activeSortButton,
+            ]}
+            onPress={() => setSortOrder("newest")}
+          >
+            <Text
+              style={[
+                styles.sortText,
+                sortOrder === "newest" && styles.activeSortText,
+              ]}
+            >
+              Newest
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={[
+              styles.sortButton,
+              sortOrder === "oldest" && styles.activeSortButton,
+            ]}
+            onPress={() => setSortOrder("oldest")}
+          >
+            <Text
+              style={[
+                styles.sortText,
+                sortOrder === "oldest" && styles.activeSortText,
+              ]}
+            >
+              Oldest
+            </Text>
+          </Pressable>
+        </View>
+
+        <Text style={styles.sectionTitle}>
+          {filteredNotes.length}{" "}
+          {filteredNotes.length === 1 ? "Note" : "Notes"}
+        </Text>
+
         {filteredNotes.length === 0 ? (
           <Text style={styles.emptyText}>
-            No {selectedCategory.toLowerCase()} notes yet.
+            {notes.filter(
+              (note) =>
+                note.category?.trim().toLowerCase() ===
+                selectedCategory.toLowerCase()
+            ).length === 0
+              ? `No ${selectedCategory.toLowerCase()} notes yet.`
+              : "No notes found."}
           </Text>
         ) : (
           filteredNotes.map((note) => (
@@ -292,6 +373,51 @@ const styles = StyleSheet.create({
     fontSize: 19,
     fontWeight: "700",
     marginBottom: 18,
+  },
+  searchInput: {
+    backgroundColor: "#1E1E1E",
+    borderWidth: 1,
+    borderColor: "#303030",
+    borderRadius: 10,
+    padding: 14,
+    color: "#F5F1E8",
+    fontSize: 14,
+    marginBottom: 18,
+  },
+  sortContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 25,
+  },
+  sortLabel: {
+    color: "#999999",
+    fontSize: 13,
+  },
+  sortButton: {
+    borderWidth: 1,
+    borderColor: "#303030",
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 7,
+  },
+  activeSortButton: {
+    backgroundColor: "#D97745",
+    borderColor: "#D97745",
+  },
+  sortText: {
+    color: "#999999",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  activeSortText: {
+    color: "#121212",
+  },
+  sectionTitle: {
+    color: "#F5F1E8",
+    fontSize: 17,
+    fontWeight: "700",
+    marginBottom: 15,
   },
   emptyText: {
     color: "#999999",
