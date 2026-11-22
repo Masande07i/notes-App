@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   Text,
@@ -30,6 +31,7 @@ export default function Login() {
 
       router.replace("/protected/home");
     } catch (error) {
+      console.log("LOGIN ERROR:", error);
       Alert.alert("Login Failed", "Invalid email or password.");
     }
   };
@@ -74,15 +76,15 @@ export default function Login() {
               onChangeText={setPassword}
             />
 
-           <Pressable
-          style={({ pressed }) => [
-            styles.button,
-            pressed && styles.buttonPressed,
-          ]}
-          onPress={handleLogin}
-        >
-          <Text style={styles.buttonText}>Login</Text>
-        </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                styles.button,
+                pressed && styles.buttonPressed,
+              ]}
+              onPress={handleLogin}
+            >
+              <Text style={styles.buttonText}>Login</Text>
+            </Pressable>
           </View>
         </View>
 
@@ -90,11 +92,11 @@ export default function Login() {
           <Text style={styles.registerText}>Don't have an account?</Text>
 
           <Pressable
-          style={({ pressed }) => pressed && styles.linkPressed}
-          onPress={() => router.push("/auth/register")}
-        >
-          <Text style={styles.registerButton}>Create one</Text>
-        </Pressable>
+            style={({ pressed }) => pressed && styles.linkPressed}
+            onPress={() => router.push("/auth/register")}
+          >
+            <Text style={styles.registerButton}>Create one</Text>
+          </Pressable>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -115,9 +117,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   buttonPressed: {
-  opacity: 0.75,
-  transform: [{ scale: 0.98 }],
-},
+    opacity: 0.75,
+    transform: [{ scale: 0.98 }],
+  },
   linkPressed: {
     opacity: 0.6,
   },

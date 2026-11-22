@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { Text, View, StyleSheet, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { logoutUser } from "../../services/auth";
+import AddNoteModal from"../../components/addNoteModal";
 
 export default function Home() {
   const router = useRouter();
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const handleLogout = async () => {
     await logoutUser();
@@ -25,10 +28,25 @@ export default function Home() {
           styles.button,
           pressed && styles.buttonPressed,
         ]}
+        onPress={() => setIsModalVisible(true)}
+      >
+        <Text style={styles.buttonText}>+ Add Note</Text>
+      </Pressable>
+
+      <Pressable
+        style={({ pressed }) => [
+          styles.logoutButton,
+          pressed && styles.buttonPressed,
+        ]}
         onPress={handleLogout}
       >
-        <Text style={styles.buttonText}>Logout</Text>
+        <Text style={styles.logoutText}>Logout</Text>
       </Pressable>
+
+      <AddNoteModal
+        visible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+      />
     </View>
   );
 }
@@ -71,5 +89,15 @@ const styles = StyleSheet.create({
     color: "#121212",
     fontSize: 15,
     fontWeight: "700",
+  },
+  logoutButton: {
+    paddingVertical: 15,
+    alignItems: "center",
+    marginTop: 12,
+  },
+  logoutText: {
+    color: "#999999",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });

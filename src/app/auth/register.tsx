@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   Text,
@@ -46,6 +47,7 @@ export default function Register() {
         },
       ]);
     } catch (error) {
+      console.log("REGISTER ERROR:", error);
       Alert.alert("Error", "Could not create your account.");
     }
   };
@@ -110,26 +112,26 @@ export default function Register() {
             />
 
             <Pressable
-            style={({ pressed }) => [
-              styles.button,
-              pressed && styles.buttonPressed,
-            ]}
-            onPress={handleRegister}
-          >
-            <Text style={styles.buttonText}>Create Account</Text>
-          </Pressable>
+              style={({ pressed }) => [
+                styles.button,
+                pressed && styles.buttonPressed,
+              ]}
+              onPress={handleRegister}
+            >
+              <Text style={styles.buttonText}>Create Account</Text>
+            </Pressable>
           </View>
         </View>
 
         <View style={styles.loginContainer}>
           <Text style={styles.loginText}>Already have an account?</Text>
 
-         <Pressable
-          style={({ pressed }) => pressed && styles.linkPressed}
-          onPress={() => router.push("/auth/login")}
-        >
-          <Text style={styles.loginButton}>Login</Text>
-        </Pressable>
+          <Pressable
+            style={({ pressed }) => pressed && styles.linkPressed}
+            onPress={() => router.push("/auth/login")}
+          >
+            <Text style={styles.loginButton}>Login</Text>
+          </Pressable>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -161,13 +163,6 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginBottom: 10,
   },
-  buttonPressed: {
-  opacity: 0.75,
-  transform: [{ scale: 0.98 }],
-},
-  linkPressed: {
-    opacity: 0.6,
-  },
   description: {
     color: "#999999",
     fontSize: 14,
@@ -197,6 +192,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     marginTop: 12,
+  },
+  buttonPressed: {
+    opacity: 0.75,
+    transform: [{ scale: 0.98 }],
+  },
+  linkPressed: {
+    opacity: 0.6,
   },
   buttonText: {
     color: "#121212",
