@@ -7,6 +7,7 @@ import {
   Pressable,
   ScrollView,
   Alert,
+  TextInput,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -30,6 +31,7 @@ export default function Home() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [notes, setNotes] = useState<Note[]>([]);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [searchText, setSearchText] = useState("");
 
   const loadNotes = async () => {
     const savedNotes = await AsyncStorage.getItem("notes");
@@ -123,6 +125,12 @@ export default function Home() {
     setIsModalVisible(true);
   };
 
+  const filteredNotes = notes.filter(
+    (note) =>
+      note.title.toLowerCase().includes(searchText.toLowerCase()) ||
+      note.notes.toLowerCase().includes(searchText.toLowerCase())
+  );
+
   return (
     <View style={styles.container}>
       <ScrollView
@@ -152,49 +160,61 @@ export default function Home() {
             {notes.length === 0 ? "No notes yet." : "Your saved notes"}
           </Text>
 
-          {notes.map((note) => (
-            <View key={note.id} style={styles.noteCard}>
-              <View style={styles.noteHeader}>
-                <Text style={styles.noteTitle}>
-                  {note.title || "Untitled Note"}
-                </Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search your notes..."
+            placeholderTextColor="#777777"
+            value={searchText}
+            onChangeText={setSearchText}
+          />
 
-                <Text style={styles.category}>
-                  {note.category}
-                </Text>
-              </View>
+          {filteredNotes.length === 0 ? (
+            <Text style={styles.emptyText}>
+              {notes.length === 0
+                ? "Add your first note to get started."
+                : "No notes found."}
+            </Text>
+          ) : (
+            filteredNotes.map((note) => (
+              <View key={note.id} style={styles.noteCard}>
+                <View style={styles.noteHeader}>
+                  <Text style={styles.noteTitle}>
+                    {note.title || "Untitled Note"}
+                  </Text>
 
-              <Text style={styles.noteText}>
-                {note.notes}
-              </Text>
+                  <Text style={styles.category}>{note.category}</Text>
+                </View>
 
-              <Text style={styles.date}>
-                Added {new Date(note.dateAdded).toLocaleDateString()}
-              </Text>
+                <Text style={styles.noteText}>{note.notes}</Text>
 
-              {note.editedAt && (
                 <Text style={styles.date}>
-                  Edited {new Date(note.editedAt).toLocaleString()}
+                  Added {new Date(note.dateAdded).toLocaleDateString()}
                 </Text>
-              )}
 
-              <View style={styles.noteActions}>
-                <Pressable
-                  style={styles.editButton}
-                  onPress={() => handleEditNote(note)}
-                >
-                  <Text style={styles.editText}>Edit</Text>
-                </Pressable>
+                {note.editedAt && (
+                  <Text style={styles.date}>
+                    Edited {new Date(note.editedAt).toLocaleString()}
+                  </Text>
+                )}
 
-                <Pressable
-                  style={styles.deleteButton}
-                  onPress={() => handleDeleteNote(note.id)}
-                >
-                  <Text style={styles.deleteText}>Delete</Text>
-                </Pressable>
+                <View style={styles.noteActions}>
+                  <Pressable
+                    style={styles.editButton}
+                    onPress={() => handleEditNote(note)}
+                  >
+                    <Text style={styles.editText}>Edit</Text>
+                  </Pressable>
+
+                  <Pressable
+                    style={styles.deleteButton}
+                    onPress={() => handleDeleteNote(note.id)}
+                  >
+                    <Text style={styles.deleteText}>Delete</Text>
+                  </Pressable>
+                </View>
               </View>
-            </View>
-          ))}
+            ))
+          )}
         </View>
 
         <Pressable
@@ -268,6 +288,22 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     marginBottom: 15,
+  },
+  searchInput: {
+    backgroundColor: "#1E1E1E",
+    borderWidth: 1,
+    borderColor: "#303030",
+    borderRadius: 10,
+    padding: 14,
+    color: "#F5F1E8",
+    fontSize: 14,
+    marginBottom: 18,
+  },
+  emptyText: {
+    color: "#999999",
+    fontSize: 14,
+    textAlign: "center",
+    paddingVertical: 20,
   },
   noteCard: {
     backgroundColor: "#1E1E1E",
