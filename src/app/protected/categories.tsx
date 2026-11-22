@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AddNoteModal, {
   NoteCategory,
 } from "../../components/addNoteModal";
+import { getCurrentUser } from "../../services/auth";
 
 type Note = {
   id: string;
@@ -32,6 +33,7 @@ export default function Categories() {
     useState<NoteCategory>("Work");
 
   const [notes, setNotes] = useState<Note[]>([]);
+  const [notesKey, setNotesKey] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -40,10 +42,28 @@ export default function Categories() {
   const categories: NoteCategory[] = ["Work", "Study", "Personal"];
 
   const loadNotes = async () => {
-    const savedNotes = await AsyncStorage.getItem("notes");
+    try {
+      const user = await getCurrentUser();
 
-    if (savedNotes) {
-      setNotes(JSON.parse(savedNotes));
+      if (!user) {
+        setNotes([]);
+        setNotesKey(null);
+        return;
+      }
+
+      const userNotesKey = `notes_${user.email}`;
+
+      setNotesKey(userNotesKey);
+
+      const savedNotes = await AsyncStorage.getItem(userNotesKey);
+
+      if (savedNotes) {
+        setNotes(JSON.parse(savedNotes));
+      } else {
+        setNotes([]);
+      }
+    } catch (error) {
+      console.log("LOAD NOTES ERROR:", error);
     }
   };
 
@@ -62,6 +82,8 @@ export default function Categories() {
     notes: string;
     category: NoteCategory;
   }) => {
+    if (!notesKey) return;
+
     const note: Note = {
       id: Date.now().toString(),
       title: newNote.title,
@@ -72,7 +94,7 @@ export default function Categories() {
 
     const updatedNotes = [...notes, note];
 
-    await AsyncStorage.setItem("notes", JSON.stringify(updatedNotes));
+    await AsyncStorage.setItem(notesKey, JSON.stringify(updatedNotes));
     setNotes(updatedNotes);
   };
 
@@ -86,7 +108,7 @@ export default function Categories() {
     notes: string;
     category: NoteCategory;
   }) => {
-    if (!selectedNote) return;
+    if (!selectedNote || !notesKey) return;
 
     const updatedNotes = notes.map((note) =>
       note.id === selectedNote.id
@@ -100,7 +122,7 @@ export default function Categories() {
         : note
     );
 
-    await AsyncStorage.setItem("notes", JSON.stringify(updatedNotes));
+    await AsyncStorage.setItem(notesKey, JSON.stringify(updatedNotes));
     setNotes(updatedNotes);
     setSelectedNote(null);
   };
@@ -118,12 +140,14 @@ export default function Categories() {
           text: "Delete",
           style: "destructive",
           onPress: async () => {
+            if (!notesKey) return;
+
             const updatedNotes = notes.filter(
               (note) => note.id !== id
             );
 
             await AsyncStorage.setItem(
-              "notes",
+              notesKey,
               JSON.stringify(updatedNotes)
             );
 
@@ -173,6 +197,7 @@ export default function Categories() {
               pressed && styles.buttonPressed,
             ]}
             onPress={() => setIsModalVisible(true)}
+            disabled={!notesKey}
           >
             <Text style={styles.addButtonText}>+ Create a Note</Text>
           </Pressable>

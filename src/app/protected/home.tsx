@@ -6,12 +6,14 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AddNoteModal, {
   NoteCategory,
 } from "../../components/addNoteModal";
+import { getCurrentUser } from "../../services/auth";
 
 type Note = {
   id: string;
@@ -34,22 +36,40 @@ export default function Home() {
     notes: string;
     category: NoteCategory;
   }) => {
-    const savedNotes = await AsyncStorage.getItem("notes");
-    const existingNotes: Note[] = savedNotes
-      ? JSON.parse(savedNotes)
-      : [];
+    try {
+      const user = await getCurrentUser();
 
-    const newNote: Note = {
-      id: Date.now().toString(),
-      title: note.title,
-      notes: note.notes,
-      category: note.category,
-      dateAdded: new Date().toISOString(),
-    };
+      if (!user) {
+        Alert.alert("Error", "Please log in to create a note.");
+        return;
+      }
 
-    const updatedNotes = [...existingNotes, newNote];
+      const notesKey = `notes_${user.email}`;
 
-    await AsyncStorage.setItem("notes", JSON.stringify(updatedNotes));
+      const savedNotes = await AsyncStorage.getItem(notesKey);
+
+      const existingNotes: Note[] = savedNotes
+        ? JSON.parse(savedNotes)
+        : [];
+
+      const newNote: Note = {
+        id: Date.now().toString(),
+        title: note.title,
+        notes: note.notes,
+        category: note.category,
+        dateAdded: new Date().toISOString(),
+      };
+
+      const updatedNotes = [...existingNotes, newNote];
+
+      await AsyncStorage.setItem(
+        notesKey,
+        JSON.stringify(updatedNotes)
+      );
+    } catch (error) {
+      console.log("SAVE NOTE ERROR:", error);
+      Alert.alert("Error", "Could not save your note.");
+    }
   };
 
   return (

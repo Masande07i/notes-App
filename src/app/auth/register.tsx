@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Text,
@@ -10,6 +9,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { registerUser } from "../../services/auth";
@@ -21,9 +21,15 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async () => {
-    if (!username || !email || !password || !confirmPassword) {
+    if (
+      !username.trim() ||
+      !email.trim() ||
+      !password ||
+      !confirmPassword
+    ) {
       Alert.alert("Error", "Please fill in all fields.");
       return;
     }
@@ -34,8 +40,10 @@ export default function Register() {
     }
 
     try {
+      setIsLoading(true);
+
       await registerUser({
-        username,
+        username: username.trim(),
         email: email.trim().toLowerCase(),
         password,
       });
@@ -49,6 +57,8 @@ export default function Register() {
     } catch (error) {
       console.log("REGISTER ERROR:", error);
       Alert.alert("Error", "Could not create your account.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -78,6 +88,7 @@ export default function Register() {
               placeholderTextColor="#666666"
               value={username}
               onChangeText={setUsername}
+              editable={!isLoading}
             />
 
             <Text style={styles.label}>Email</Text>
@@ -89,6 +100,7 @@ export default function Register() {
               autoCapitalize="none"
               value={email}
               onChangeText={setEmail}
+              editable={!isLoading}
             />
 
             <Text style={styles.label}>Password</Text>
@@ -99,6 +111,7 @@ export default function Register() {
               secureTextEntry
               value={password}
               onChangeText={setPassword}
+              editable={!isLoading}
             />
 
             <Text style={styles.label}>Confirm Password</Text>
@@ -109,16 +122,28 @@ export default function Register() {
               secureTextEntry
               value={confirmPassword}
               onChangeText={setConfirmPassword}
+              editable={!isLoading}
             />
 
             <Pressable
               style={({ pressed }) => [
                 styles.button,
                 pressed && styles.buttonPressed,
+                isLoading && styles.disabledButton,
               ]}
               onPress={handleRegister}
+              disabled={isLoading}
             >
-              <Text style={styles.buttonText}>Create Account</Text>
+              {isLoading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator color="#121212" size="small" />
+                  <Text style={styles.buttonText}>
+                    Creating account...
+                  </Text>
+                </View>
+              ) : (
+                <Text style={styles.buttonText}>Create Account</Text>
+              )}
             </Pressable>
           </View>
         </View>
@@ -129,6 +154,7 @@ export default function Register() {
           <Pressable
             style={({ pressed }) => pressed && styles.linkPressed}
             onPress={() => router.push("/auth/login")}
+            disabled={isLoading}
           >
             <Text style={styles.loginButton}>Login</Text>
           </Pressable>
@@ -196,6 +222,14 @@ const styles = StyleSheet.create({
   buttonPressed: {
     opacity: 0.75,
     transform: [{ scale: 0.98 }],
+  },
+  disabledButton: {
+    opacity: 0.8,
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
   linkPressed: {
     opacity: 0.6,

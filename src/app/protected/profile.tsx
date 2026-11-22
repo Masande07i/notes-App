@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import {
   Text,
@@ -26,6 +27,9 @@ export default function Profile() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
   useEffect(() => {
     const loadProfile = async () => {
       const currentUser = await getCurrentUser();
@@ -49,7 +53,35 @@ export default function Profile() {
       return;
     }
 
-    if (newPassword && newPassword.length < 6) {
+    try {
+      const updatedUser = await updateUserProfile(
+        username.trim(),
+        email.trim(),
+        currentPassword
+      );
+
+      setUser(updatedUser);
+      setUsername(updatedUser.username);
+      setEmail(updatedUser.email);
+      setCurrentPassword("");
+      setIsEditingProfile(false);
+
+      Alert.alert("Success", "Your profile has been updated.");
+    } catch (error) {
+      Alert.alert(
+        "Update failed",
+        error instanceof Error ? error.message : "Something went wrong."
+      );
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      Alert.alert("Missing information", "Please fill in all password fields.");
+      return;
+    }
+
+    if (newPassword.length < 6) {
       Alert.alert(
         "Invalid password",
         "Your new password must have at least 6 characters."
@@ -64,26 +96,42 @@ export default function Profile() {
 
     try {
       const updatedUser = await updateUserProfile(
-        username.trim(),
-        email.trim(),
+        username,
+        email,
         currentPassword,
-        newPassword || undefined
+        newPassword
       );
 
       setUser(updatedUser);
-      setUsername(updatedUser.username);
-      setEmail(updatedUser.email);
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
+      setIsChangingPassword(false);
 
-      Alert.alert("Success", "Your profile has been updated.");
+      Alert.alert("Success", "Your password has been changed.");
     } catch (error) {
       Alert.alert(
         "Update failed",
         error instanceof Error ? error.message : "Something went wrong."
       );
     }
+  };
+
+  const handleCancelProfileEdit = () => {
+    if (user) {
+      setUsername(user.username);
+      setEmail(user.email);
+    }
+
+    setCurrentPassword("");
+    setIsEditingProfile(false);
+  };
+
+  const handleCancelPasswordChange = () => {
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setIsChangingPassword(false);
   };
 
   const handleLogout = () => {
@@ -127,82 +175,156 @@ export default function Profile() {
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
-              {username.charAt(0).toUpperCase()}
+              {user.username.charAt(0).toUpperCase()}
             </Text>
           </View>
 
-          <Text style={styles.profileName}>{username}</Text>
-          <Text style={styles.profileEmail}>{email}</Text>
+          <Text style={styles.profileName}>{user.username}</Text>
+          <Text style={styles.profileEmail}>{user.email}</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account details</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Account details</Text>
 
-          <Text style={styles.label}>Username</Text>
-          <TextInput
-            style={styles.input}
-            value={username}
-            onChangeText={setUsername}
-            placeholder="Enter username"
-            placeholderTextColor="#777777"
-            autoCapitalize="none"
-          />
+            {!isEditingProfile && (
+              <Pressable onPress={() => setIsEditingProfile(true)}>
+                <Text style={styles.editText}>Edit Profile</Text>
+              </Pressable>
+            )}
+          </View>
 
-          <Text style={styles.label}>Email address</Text>
-          <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Enter email"
-            placeholderTextColor="#777777"
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+          {isEditingProfile ? (
+            <>
+              <Text style={styles.label}>Username</Text>
+              <TextInput
+                style={styles.input}
+                value={username}
+                onChangeText={setUsername}
+                placeholder="Enter username"
+                placeholderTextColor="#777777"
+                autoCapitalize="none"
+              />
+
+              <Text style={styles.label}>Email address</Text>
+              <TextInput
+                style={styles.input}
+                value={email}
+                onChangeText={setEmail}
+                placeholder="Enter email"
+                placeholderTextColor="#777777"
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+
+              <Text style={styles.label}>Current password *</Text>
+              <TextInput
+                style={styles.input}
+                value={currentPassword}
+                onChangeText={setCurrentPassword}
+                placeholder="Enter current password to save"
+                placeholderTextColor="#777777"
+                secureTextEntry
+              />
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.updateButton,
+                  pressed && styles.buttonPressed,
+                ]}
+                onPress={handleUpdateProfile}
+              >
+                <Text style={styles.updateButtonText}>Save Changes</Text>
+              </Pressable>
+
+              <Pressable
+                style={styles.cancelButton}
+                onPress={handleCancelProfileEdit}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </Pressable>
+            </>
+          ) : (
+            <>
+              <Text style={styles.label}>Username</Text>
+              <View style={styles.detailBox}>
+                <Text style={styles.detailText}>{user.username}</Text>
+              </View>
+
+              <Text style={styles.label}>Email address</Text>
+              <View style={styles.detailBox}>
+                <Text style={styles.detailText}>{user.email}</Text>
+              </View>
+            </>
+          )}
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Change password</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Password</Text>
 
-          <Text style={styles.label}>Current password *</Text>
-          <TextInput
-            style={styles.input}
-            value={currentPassword}
-            onChangeText={setCurrentPassword}
-            placeholder="Enter current password"
-            placeholderTextColor="#777777"
-            secureTextEntry
-          />
+            {!isChangingPassword && (
+              <Pressable onPress={() => setIsChangingPassword(true)}>
+                <Text style={styles.editText}>Change Password</Text>
+              </Pressable>
+            )}
+          </View>
 
-          <Text style={styles.label}>New password</Text>
-          <TextInput
-            style={styles.input}
-            value={newPassword}
-            onChangeText={setNewPassword}
-            placeholder="Enter new password"
-            placeholderTextColor="#777777"
-            secureTextEntry
-          />
+          {isChangingPassword ? (
+            <>
+              <Text style={styles.label}>Current password *</Text>
+              <TextInput
+                style={styles.input}
+                value={currentPassword}
+                onChangeText={setCurrentPassword}
+                placeholder="Enter current password"
+                placeholderTextColor="#777777"
+                secureTextEntry
+              />
 
-          <Text style={styles.label}>Confirm new password</Text>
-          <TextInput
-            style={styles.input}
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            placeholder="Confirm new password"
-            placeholderTextColor="#777777"
-            secureTextEntry
-          />
+              <Text style={styles.label}>New password</Text>
+              <TextInput
+                style={styles.input}
+                value={newPassword}
+                onChangeText={setNewPassword}
+                placeholder="Enter new password"
+                placeholderTextColor="#777777"
+                secureTextEntry
+              />
+
+              <Text style={styles.label}>Confirm new password</Text>
+              <TextInput
+                style={styles.input}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="Confirm new password"
+                placeholderTextColor="#777777"
+                secureTextEntry
+              />
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.updateButton,
+                  pressed && styles.buttonPressed,
+                ]}
+                onPress={handleChangePassword}
+              >
+                <Text style={styles.updateButtonText}>Update Password</Text>
+              </Pressable>
+
+              <Pressable
+                style={styles.cancelButton}
+                onPress={handleCancelPasswordChange}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </Pressable>
+            </>
+          ) : (
+            <Text style={styles.passwordDescription}>
+              Your password is private and securely stored.
+            </Text>
+          )}
         </View>
-
-        <Pressable
-          style={({ pressed }) => [
-            styles.updateButton,
-            pressed && styles.buttonPressed,
-          ]}
-          onPress={handleUpdateProfile}
-        >
-          <Text style={styles.updateButtonText}>Save changes</Text>
-        </Pressable>
 
         <Pressable
           style={({ pressed }) => [
@@ -281,11 +403,21 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 30,
   },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
   sectionTitle: {
     color: "#F5F1E8",
     fontSize: 18,
     fontWeight: "700",
-    marginBottom: 20,
+  },
+  editText: {
+    color: "#D97745",
+    fontSize: 13,
+    fontWeight: "700",
   },
   label: {
     color: "#CCCCCC",
@@ -303,17 +435,47 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 18,
   },
+  detailBox: {
+    backgroundColor: "#1E1E1E",
+    borderWidth: 1,
+    borderColor: "#303030",
+    borderRadius: 9,
+    padding: 15,
+    marginBottom: 18,
+  },
+  detailText: {
+    color: "#F5F1E8",
+    fontSize: 14,
+  },
+  passwordDescription: {
+    color: "#999999",
+    fontSize: 13,
+    lineHeight: 20,
+  },
   updateButton: {
     backgroundColor: "#D97745",
     paddingVertical: 17,
     borderRadius: 10,
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 12,
   },
   updateButtonText: {
     color: "#121212",
     fontSize: 15,
     fontWeight: "700",
+  },
+  cancelButton: {
+    backgroundColor: "#1E1E1E",
+    borderWidth: 1,
+    borderColor: "#444444",
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  cancelButtonText: {
+    color: "#CCCCCC",
+    fontSize: 14,
+    fontWeight: "600",
   },
   logoutButton: {
     backgroundColor: "#1E1E1E",

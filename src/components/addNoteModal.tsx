@@ -38,13 +38,13 @@ export default function AddNoteModal({
 }: AddNoteModalProps) {
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
-  const [category, setCategory] = useState<NoteCategory>("Personal");
+  const [category, setCategory] = useState<NoteCategory>("Work");
 
   useEffect(() => {
     if (visible) {
       setTitle(initialNote?.title || "");
       setNotes(initialNote?.notes || "");
-      setCategory(initialNote?.category || "Personal");
+      setCategory(initialNote?.category || "Work");
     }
   }, [visible, initialNote]);
 

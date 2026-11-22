@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Text,
@@ -10,6 +9,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { loginUser } from "../../services/auth";
@@ -19,20 +19,25 @@ export default function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    if (!email.trim() || !password) {
       Alert.alert("Error", "Please enter your email and password.");
       return;
     }
 
     try {
+      setIsLoading(true);
+
       await loginUser(email.trim().toLowerCase(), password);
 
       router.replace("/protected/home");
     } catch (error) {
       console.log("LOGIN ERROR:", error);
       Alert.alert("Login Failed", "Invalid email or password.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -64,6 +69,7 @@ export default function Login() {
               autoCapitalize="none"
               value={email}
               onChangeText={setEmail}
+              editable={!isLoading}
             />
 
             <Text style={styles.label}>Password</Text>
@@ -74,16 +80,26 @@ export default function Login() {
               secureTextEntry
               value={password}
               onChangeText={setPassword}
+              editable={!isLoading}
             />
 
             <Pressable
               style={({ pressed }) => [
                 styles.button,
-                pressed && styles.buttonPressed,
+                (pressed || isLoading) && styles.buttonPressed,
+                isLoading && styles.disabledButton,
               ]}
               onPress={handleLogin}
+              disabled={isLoading}
             >
-              <Text style={styles.buttonText}>Login</Text>
+              {isLoading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator color="#121212" size="small" />
+                  <Text style={styles.buttonText}>Logging in...</Text>
+                </View>
+              ) : (
+                <Text style={styles.buttonText}>Login</Text>
+              )}
             </Pressable>
           </View>
         </View>
@@ -94,6 +110,7 @@ export default function Login() {
           <Pressable
             style={({ pressed }) => pressed && styles.linkPressed}
             onPress={() => router.push("/auth/register")}
+            disabled={isLoading}
           >
             <Text style={styles.registerButton}>Create one</Text>
           </Pressable>
@@ -119,6 +136,9 @@ const styles = StyleSheet.create({
   buttonPressed: {
     opacity: 0.75,
     transform: [{ scale: 0.98 }],
+  },
+  disabledButton: {
+    opacity: 0.8,
   },
   linkPressed: {
     opacity: 0.6,
@@ -164,6 +184,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     marginTop: 12,
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
   buttonText: {
     color: "#121212",
