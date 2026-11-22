@@ -127,7 +127,7 @@ export default function Home() {
           </View>
         </View>
 
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <View style={styles.notesHeader}>
             <View>
               <Text style={styles.sectionTitle}>Recent notes</Text>
@@ -168,10 +168,10 @@ export default function Home() {
                 <Text style={styles.date}>
                   {new Date(note.dateAdded).toLocaleDateString()}
                 </Text>
-              </View>
-            ))
-          )}
-        </View>
+              </View> */}
+            {/* ))
+          )} */}
+        {/* </View> */}
       </ScrollView>
 
       <AddNoteModal
