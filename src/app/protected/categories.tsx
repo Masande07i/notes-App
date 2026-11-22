@@ -57,6 +57,25 @@ export default function Categories() {
     }
   }, [category]);
 
+  const handleCreateNote = async (newNote: {
+    title: string;
+    notes: string;
+    category: NoteCategory;
+  }) => {
+    const note: Note = {
+      id: Date.now().toString(),
+      title: newNote.title,
+      notes: newNote.notes,
+      category: newNote.category,
+      dateAdded: new Date().toISOString(),
+    };
+
+    const updatedNotes = [...notes, note];
+
+    await AsyncStorage.setItem("notes", JSON.stringify(updatedNotes));
+    setNotes(updatedNotes);
+  };
+
   const handleEditNote = (note: Note) => {
     setSelectedNote(note);
     setIsModalVisible(true);
@@ -145,7 +164,19 @@ export default function Categories() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.logo}>note.</Text>
+        <View style={styles.header}>
+          <Text style={styles.logo}>note.</Text>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.addButton,
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={() => setIsModalVisible(true)}
+          >
+            <Text style={styles.addButtonText}>+ Create a Note</Text>
+          </Pressable>
+        </View>
 
         <Text style={styles.title}>Categories.</Text>
 
@@ -300,7 +331,7 @@ export default function Categories() {
           setIsModalVisible(false);
           setSelectedNote(null);
         }}
-        onSave={handleSaveNote}
+        onSave={selectedNote ? handleSaveNote : handleCreateNote}
         initialNote={
           selectedNote
             ? {
@@ -325,11 +356,31 @@ const styles = StyleSheet.create({
     paddingTop: 55,
     paddingBottom: 40,
   },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 35,
+  },
   logo: {
     color: "#D97745",
     fontSize: 29,
     fontWeight: "800",
-    marginBottom: 35,
+  },
+  addButton: {
+    backgroundColor: "#D97745",
+    paddingVertical: 11,
+    paddingHorizontal: 15,
+    borderRadius: 9,
+  },
+  addButtonText: {
+    color: "#121212",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  buttonPressed: {
+    opacity: 0.75,
+    transform: [{ scale: 0.98 }],
   },
   title: {
     color: "#F5F1E8",
