@@ -49,7 +49,7 @@ src/
 │   │   ├── _layout.tsx
 │   │   ├── login.tsx
 │   │   └── register.tsx
-│   └── (protected)/
+│   └── protected/
 │       ├── _layout.tsx
 │       ├── home.tsx
 │       ├── categories.tsx
@@ -57,7 +57,7 @@ src/
 │
 ├── components/
 │   └── addNoteModal.tsx
-│
+│   |__noteCard.tsx
 └── services/
     └── auth.ts
 ```
@@ -67,8 +67,8 @@ src/
 ### 1. Clone the project
 
 ```bash
-git clone <your-github-repository-url>
-cd <project-folder>
+git clone https://github.com/Masande07i/notes-App.git
+cd notes-App
 ```
 
 ### 2. Install dependencies

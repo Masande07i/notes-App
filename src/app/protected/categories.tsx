@@ -7,14 +7,18 @@ import {
   Pressable,
   ScrollView,
   Alert,
-  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Ionicons } from "@expo/vector-icons";
 import AddNoteModal, {
   NoteCategory,
 } from "../../components/addNoteModal";
+import CategorySelector from "../../components/categorySelector";
+import NoteSearch from "../../components/noteSearch";
+import NoteSort from "../../components/noteSort";
+import NoteCard from "../../components/noteCard";
 import { getCurrentUser } from "../../services/auth";
 
 type Note = {
@@ -31,15 +35,12 @@ export default function Categories() {
 
   const [selectedCategory, setSelectedCategory] =
     useState<NoteCategory>("Work");
-
   const [notes, setNotes] = useState<Note[]>([]);
   const [notesKey, setNotesKey] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-
-  const categories: NoteCategory[] = ["Work", "Study", "Personal"];
 
   const loadNotes = async () => {
     try {
@@ -52,7 +53,6 @@ export default function Categories() {
       }
 
       const userNotesKey = `notes_${user.email}`;
-
       setNotesKey(userNotesKey);
 
       const savedNotes = await AsyncStorage.getItem(userNotesKey);
@@ -72,7 +72,10 @@ export default function Categories() {
   }, []);
 
   useEffect(() => {
-    if (category && categories.includes(category as NoteCategory)) {
+    if (
+      category &&
+      ["Work", "Study", "Personal"].includes(category)
+    ) {
       setSelectedCategory(category as NoteCategory);
     }
   }, [category]);
@@ -94,7 +97,11 @@ export default function Categories() {
 
     const updatedNotes = [...notes, note];
 
-    await AsyncStorage.setItem(notesKey, JSON.stringify(updatedNotes));
+    await AsyncStorage.setItem(
+      notesKey,
+      JSON.stringify(updatedNotes)
+    );
+
     setNotes(updatedNotes);
   };
 
@@ -122,7 +129,11 @@ export default function Categories() {
         : note
     );
 
-    await AsyncStorage.setItem(notesKey, JSON.stringify(updatedNotes));
+    await AsyncStorage.setItem(
+      notesKey,
+      JSON.stringify(updatedNotes)
+    );
+
     setNotes(updatedNotes);
     setSelectedNote(null);
   };
@@ -158,15 +169,17 @@ export default function Categories() {
     );
   };
 
-  const filteredNotes = notes
+  const categoryNotes = notes.filter(
+    (note) =>
+      note.category?.trim().toLowerCase() ===
+      selectedCategory.toLowerCase()
+  );
+
+  const filteredNotes = categoryNotes
     .filter(
       (note) =>
-        note.category?.trim().toLowerCase() ===
-          selectedCategory.toLowerCase() &&
-        (
-          note.title.toLowerCase().includes(searchText.toLowerCase()) ||
-          note.notes.toLowerCase().includes(searchText.toLowerCase())
-        )
+        note.title.toLowerCase().includes(searchText.toLowerCase()) ||
+        note.notes.toLowerCase().includes(searchText.toLowerCase())
     )
     .sort((a, b) => {
       if (sortOrder === "newest") {
@@ -183,10 +196,14 @@ export default function Categories() {
     });
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
           <Text style={styles.logo}>note.</Text>
@@ -209,82 +226,27 @@ export default function Categories() {
           Keep your notes organised.
         </Text>
 
-        <View style={styles.categories}>
-          {categories.map((categoryName) => (
-            <Pressable
-              key={categoryName}
-              style={[
-                styles.categoryButton,
-                selectedCategory === categoryName &&
-                  styles.selectedCategory,
-              ]}
-              onPress={() => {
-                setSelectedCategory(categoryName);
-                setSearchText("");
-              }}
-            >
-              <Text
-                style={[
-                  styles.categoryText,
-                  selectedCategory === categoryName &&
-                    styles.selectedCategoryText,
-                ]}
-              >
-                {categoryName}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
+        <CategorySelector
+          selectedCategory={selectedCategory}
+          onSelect={(category) => {
+            setSelectedCategory(category);
+            setSearchText("");
+          }}
+        />
 
         <Text style={styles.selectedTitle}>
           {selectedCategory} notes
         </Text>
 
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search your notes..."
-          placeholderTextColor="#777777"
-          value={searchText}
-          onChangeText={setSearchText}
+        <NoteSearch
+          searchText={searchText}
+          setSearchText={setSearchText}
         />
 
-        <View style={styles.sortContainer}>
-          <Text style={styles.sortLabel}>Sort by:</Text>
-
-          <Pressable
-            style={[
-              styles.sortButton,
-              sortOrder === "newest" && styles.activeSortButton,
-            ]}
-            onPress={() => setSortOrder("newest")}
-          >
-            <Text
-              style={[
-                styles.sortText,
-                sortOrder === "newest" && styles.activeSortText,
-              ]}
-            >
-              Newest
-            </Text>
-          </Pressable>
-
-          <Pressable
-            style={[
-              styles.sortButton,
-              sortOrder === "oldest" && styles.activeSortButton,
-            ]}
-            onPress={() => setSortOrder("oldest")}
-          >
-            <Text
-              style={[
-                styles.sortText,
-                sortOrder === "oldest" && styles.activeSortText,
-              ]}
-            >
-              Oldest
-            </Text>
-          </Pressable>
-        </View>
+        <NoteSort
+          sortOrder={sortOrder}
+          setSortOrder={setSortOrder}
+        />
 
         <Text style={styles.sectionTitle}>
           {filteredNotes.length}{" "}
@@ -293,59 +255,18 @@ export default function Categories() {
 
         {filteredNotes.length === 0 ? (
           <Text style={styles.emptyText}>
-            {notes.filter(
-              (note) =>
-                note.category?.trim().toLowerCase() ===
-                selectedCategory.toLowerCase()
-            ).length === 0
+            {categoryNotes.length === 0
               ? `No ${selectedCategory.toLowerCase()} notes yet.`
               : "No notes found."}
           </Text>
         ) : (
           filteredNotes.map((note) => (
-            <View key={note.id} style={styles.noteCard}>
-              <View style={styles.noteHeader}>
-                <Text style={styles.noteTitle}>
-                  {note.title || "Untitled Note"}
-                </Text>
-
-                <View style={styles.actions}>
-                  <Pressable
-                    onPress={() => handleEditNote(note)}
-                    style={styles.iconButton}
-                  >
-                    <Ionicons
-                      name="create-outline"
-                      size={21}
-                      color="#D97745"
-                    />
-                  </Pressable>
-
-                  <Pressable
-                    onPress={() => handleDeleteNote(note.id)}
-                    style={styles.iconButton}
-                  >
-                    <Ionicons
-                      name="trash-outline"
-                      size={21}
-                      color="#D97745"
-                    />
-                  </Pressable>
-                </View>
-              </View>
-
-              <Text style={styles.noteText}>{note.notes}</Text>
-
-              <Text style={styles.date}>
-                Added {new Date(note.dateAdded).toLocaleDateString()}
-              </Text>
-
-              {note.editedAt && (
-                <Text style={styles.date}>
-                  Edited {new Date(note.editedAt).toLocaleDateString()}
-                </Text>
-              )}
-            </View>
+            <NoteCard
+              key={note.id}
+              note={note}
+              onEdit={handleEditNote}
+              onDelete={handleDeleteNote}
+            />
           ))
         )}
       </ScrollView>
@@ -356,7 +277,9 @@ export default function Categories() {
           setIsModalVisible(false);
           setSelectedNote(null);
         }}
-        onSave={selectedNote ? handleSaveNote : handleCreateNote}
+        onSave={
+          selectedNote ? handleSaveNote : handleCreateNote
+        }
         initialNote={
           selectedNote
             ? {
@@ -367,7 +290,7 @@ export default function Categories() {
             : undefined
         }
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -418,76 +341,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 30,
   },
-  categories: {
-    flexDirection: "row",
-    gap: 9,
-    marginBottom: 35,
-  },
-  categoryButton: {
-    flex: 1,
-    paddingVertical: 13,
-    alignItems: "center",
-    borderRadius: 9,
-    borderWidth: 1,
-    borderColor: "#444444",
-    backgroundColor: "#1E1E1E",
-  },
-  selectedCategory: {
-    backgroundColor: "#D97745",
-    borderColor: "#D97745",
-  },
-  categoryText: {
-    color: "#999999",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  selectedCategoryText: {
-    color: "#121212",
-  },
   selectedTitle: {
     color: "#F5F1E8",
     fontSize: 19,
     fontWeight: "700",
     marginBottom: 18,
-  },
-  searchInput: {
-    backgroundColor: "#1E1E1E",
-    borderWidth: 1,
-    borderColor: "#303030",
-    borderRadius: 10,
-    padding: 14,
-    color: "#F5F1E8",
-    fontSize: 14,
-    marginBottom: 18,
-  },
-  sortContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginBottom: 25,
-  },
-  sortLabel: {
-    color: "#999999",
-    fontSize: 13,
-  },
-  sortButton: {
-    borderWidth: 1,
-    borderColor: "#303030",
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 7,
-  },
-  activeSortButton: {
-    backgroundColor: "#D97745",
-    borderColor: "#D97745",
-  },
-  sortText: {
-    color: "#999999",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  activeSortText: {
-    color: "#121212",
   },
   sectionTitle: {
     color: "#F5F1E8",
@@ -500,44 +358,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
     paddingVertical: 30,
-  },
-  noteCard: {
-    backgroundColor: "#1E1E1E",
-    borderWidth: 1,
-    borderColor: "#303030",
-    borderRadius: 12,
-    padding: 18,
-    marginBottom: 12,
-  },
-  noteHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  noteTitle: {
-    color: "#F5F1E8",
-    fontSize: 16,
-    fontWeight: "700",
-    flex: 1,
-    marginRight: 10,
-  },
-  actions: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  iconButton: {
-    padding: 5,
-  },
-  noteText: {
-    color: "#CCCCCC",
-    fontSize: 14,
-    lineHeight: 21,
-    marginBottom: 15,
-  },
-  date: {
-    color: "#777777",
-    fontSize: 11,
-    marginBottom: 5,
   },
 });
