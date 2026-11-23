@@ -4,61 +4,143 @@
 
 <img src="https://socialify.git.ci/Masande07i/notes-App/image?language=1&name=1&owner=1&stargazers=1&theme=Light" alt="notes-App" width="640" height="320" />
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A simple React Native notes application built with Expo. The app allows users to create an account, log in, manage their profile, and create and organise personal notes.
 
-## Get started
+## Features
 
-//npx expo install @react-native-async-storage/async-storage
+- User registration and login
+- Multiple user accounts
+- Logout
+- Protected screens
+- Profile information updates
+- Password changes
+- Create notes
+- Edit notes
+- Delete notes
+- Note categories:
+  - Work
+  - Study
+  - Personal
+- Search notes
+- Sort notes by newest or oldest
+- Date added and edited date
+- User-specific notes
+- Local data storage using AsyncStorage
 
-npm install bcryptjs
+## Technologies
 
-1. Install dependencies
+- React Native
+- Expo
+- Expo Router
+- TypeScript
+- AsyncStorage
+- bcryptjs
+- Expo Crypto
+- Ionicons
 
-   ```bash
-   npm install
-   ```
+## Project Structure
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```text
+src/
+├── app/
+│   ├── _layout.tsx
+│   ├── index.tsx
+│   ├── auth/
+│   │   ├── _layout.tsx
+│   │   ├── login.tsx
+│   │   └── register.tsx
+│   └── (protected)/
+│       ├── _layout.tsx
+│       ├── home.tsx
+│       ├── categories.tsx
+│       └── profile.tsx
+│
+├── components/
+│   └── addNoteModal.tsx
+│
+└── services/
+    └── auth.ts
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+## Getting Started
 
-### Other setup steps
+### 1. Clone the project
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```bash
+git clone <your-github-repository-url>
+cd <project-folder>
+```
 
-## Learn more
+### 2. Install dependencies
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+npm install
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### 3. Start the application
 
-## Join the community
+```bash
+npx expo start
+```
 
-Join our community of developers creating universal apps.
+You can then run the application using:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Expo Go
+- Android Emulator
+- iOS Simulator
+- Web browser
+
+## How It Works
+
+### Authentication
+
+Users can create an account using a username, email and password.
+
+Passwords are hashed using `bcryptjs` before being stored locally.
+
+The app supports multiple users. Each registered account is stored separately, and the currently logged-in user is stored using AsyncStorage.
+
+### Notes
+
+Notes are stored locally using AsyncStorage.
+
+Each user's notes are saved using their email address as part of the storage key. This prevents one user from seeing another user's notes.
+
+Each note contains:
+
+- Title
+- Note content
+- Category
+- Date added
+- Edited date
+
+### Profile
+
+Users can:
+
+- Update their username
+- Update their email
+- Change their password
+- Log out
+
+A user's current password is required before making profile or password changes.
+
+## Data Storage
+
+This project uses **AsyncStorage** as a local storage solution.
+
+The main storage values include:
+
+```text
+users
+loggedInUser
+notes_<user-email>
+```
+
+Because AsyncStorage is local to the device, this application is intended as a learning project rather than a production authentication system.
+
+## Author
+
+Masande
+
+Built as a React Native learning project.
