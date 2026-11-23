@@ -117,12 +117,15 @@ export default function Home() {
                   styles.categoryCard,
                   pressed && styles.cardPressed,
                 ]}
-                onPress={() =>
-                  router.push({
-                    pathname: "/protected/categories",
-                    params: { category },
-                  })
-                }
+                onPress={() => {
+                  if (category === "Work") {
+                    router.push("/protected/work");
+                  } else if (category === "Study") {
+                    router.push("/protected/study");
+                  } else {
+                    router.push("/protected/personal");
+                  }
+                }}
               >
                 <Text style={styles.categoryText}>{category}</Text>
               </Pressable>

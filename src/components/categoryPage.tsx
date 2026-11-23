@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import {
   Text,
@@ -10,16 +9,14 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AddNoteModal, {
   NoteCategory,
-} from "../../components/addNoteModal";
-import CategorySelector from "../../components/categorySelector";
-import NoteSearch from "../../components/noteSearch";
-import NoteSort from "../../components/noteSort";
-import NoteCard from "../../components/noteCard";
-import { getCurrentUser } from "../../services/auth";
+} from "./addNoteModal";
+import NoteSearch from "./noteSearch";
+import NoteSort from "./noteSort";
+import NoteCard from "./noteCard";
+import { getCurrentUser } from "../services/auth";
 
 type Note = {
   id: string;
@@ -30,11 +27,11 @@ type Note = {
   editedAt?: string;
 };
 
-export default function Categories() {
-  const { category } = useLocalSearchParams<{ category?: string }>();
+type Props = {
+  category: NoteCategory;
+};
 
-  const [selectedCategory, setSelectedCategory] =
-    useState<NoteCategory>("Work");
+export default function CategoryPage({ category }: Props) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [notesKey, setNotesKey] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
@@ -71,15 +68,6 @@ export default function Categories() {
     loadNotes();
   }, []);
 
-  useEffect(() => {
-    if (
-      category &&
-      ["Work", "Study", "Personal"].includes(category)
-    ) {
-      setSelectedCategory(category as NoteCategory);
-    }
-  }, [category]);
-
   const handleCreateNote = async (newNote: {
     title: string;
     notes: string;
@@ -97,11 +85,7 @@ export default function Categories() {
 
     const updatedNotes = [...notes, note];
 
-    await AsyncStorage.setItem(
-      notesKey,
-      JSON.stringify(updatedNotes)
-    );
-
+    await AsyncStorage.setItem(notesKey, JSON.stringify(updatedNotes));
     setNotes(updatedNotes);
   };
 
@@ -129,50 +113,31 @@ export default function Categories() {
         : note
     );
 
-    await AsyncStorage.setItem(
-      notesKey,
-      JSON.stringify(updatedNotes)
-    );
-
+    await AsyncStorage.setItem(notesKey, JSON.stringify(updatedNotes));
     setNotes(updatedNotes);
     setSelectedNote(null);
   };
 
   const handleDeleteNote = (id: string) => {
-    Alert.alert(
-      "Delete Note",
-      "Are you sure you want to delete this note?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
+    Alert.alert("Delete Note", "Are you sure you want to delete this note?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          if (!notesKey) return;
+
+          const updatedNotes = notes.filter((note) => note.id !== id);
+
+          await AsyncStorage.setItem(notesKey, JSON.stringify(updatedNotes));
+          setNotes(updatedNotes);
         },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            if (!notesKey) return;
-
-            const updatedNotes = notes.filter(
-              (note) => note.id !== id
-            );
-
-            await AsyncStorage.setItem(
-              notesKey,
-              JSON.stringify(updatedNotes)
-            );
-
-            setNotes(updatedNotes);
-          },
-        },
-      ]
-    );
+      },
+    ]);
   };
 
   const categoryNotes = notes.filter(
-    (note) =>
-      note.category?.trim().toLowerCase() ===
-      selectedCategory.toLowerCase()
+    (note) => note.category.toLowerCase() === category.toLowerCase()
   );
 
   const filteredNotes = categoryNotes
@@ -183,16 +148,10 @@ export default function Categories() {
     )
     .sort((a, b) => {
       if (sortOrder === "newest") {
-        return (
-          new Date(b.dateAdded).getTime() -
-          new Date(a.dateAdded).getTime()
-        );
+        return new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime();
       }
 
-      return (
-        new Date(a.dateAdded).getTime() -
-        new Date(b.dateAdded).getTime()
-      );
+      return new Date(a.dateAdded).getTime() - new Date(b.dateAdded).getTime();
     });
 
   return (
@@ -209,10 +168,7 @@ export default function Categories() {
           <Text style={styles.logo}>note.</Text>
 
           <Pressable
-            style={({ pressed }) => [
-              styles.addButton,
-              pressed && styles.buttonPressed,
-            ]}
+            style={styles.addButton}
             onPress={() => setIsModalVisible(true)}
             disabled={!notesKey}
           >
@@ -220,22 +176,10 @@ export default function Categories() {
           </Pressable>
         </View>
 
-        <Text style={styles.title}>Categories.</Text>
+        <Text style={styles.title}>{category}.</Text>
 
         <Text style={styles.description}>
-          Keep your notes organised.
-        </Text>
-
-        <CategorySelector
-          selectedCategory={selectedCategory}
-          onSelect={(category) => {
-            setSelectedCategory(category);
-            setSearchText("");
-          }}
-        />
-
-        <Text style={styles.selectedTitle}>
-          {selectedCategory} notes
+          Keep your {category.toLowerCase()} notes organised.
         </Text>
 
         <NoteSearch
@@ -256,7 +200,7 @@ export default function Categories() {
         {filteredNotes.length === 0 ? (
           <Text style={styles.emptyText}>
             {categoryNotes.length === 0
-              ? `No ${selectedCategory.toLowerCase()} notes yet.`
+              ? `No ${category.toLowerCase()} notes yet.`
               : "No notes found."}
           </Text>
         ) : (
@@ -277,9 +221,7 @@ export default function Categories() {
           setIsModalVisible(false);
           setSelectedNote(null);
         }}
-        onSave={
-          selectedNote ? handleSaveNote : handleCreateNote
-        }
+        onSave={selectedNote ? handleSaveNote : handleCreateNote}
         initialNote={
           selectedNote
             ? {
@@ -326,10 +268,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
   },
-  buttonPressed: {
-    opacity: 0.75,
-    transform: [{ scale: 0.98 }],
-  },
   title: {
     color: "#F5F1E8",
     fontSize: 30,
@@ -340,12 +278,6 @@ const styles = StyleSheet.create({
     color: "#999999",
     fontSize: 14,
     marginBottom: 30,
-  },
-  selectedTitle: {
-    color: "#F5F1E8",
-    fontSize: 19,
-    fontWeight: "700",
-    marginBottom: 18,
   },
   sectionTitle: {
     color: "#F5F1E8",
