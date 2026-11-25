@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import {
   Text,
@@ -10,6 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import {
   getCurrentUser,
   updateUserProfile,
@@ -49,7 +49,10 @@ export default function Profile() {
 
   const handleUpdateProfile = async () => {
     if (!username.trim() || !email.trim() || !currentPassword) {
-      Alert.alert("Missing information", "Please fill in all required fields.");
+      Alert.alert(
+        "Missing information",
+        "Please fill in all required fields."
+      );
       return;
     }
 
@@ -77,7 +80,10 @@ export default function Profile() {
 
   const handleChangePassword = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
-      Alert.alert("Missing information", "Please fill in all password fields.");
+      Alert.alert(
+        "Missing information",
+        "Please fill in all password fields."
+      );
       return;
     }
 
@@ -165,9 +171,22 @@ export default function Profile() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.logo}>note.</Text>
+        <View style={styles.header}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.backButton,
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={() => router.push("/protected/home")}
+          >
+            <Ionicons name="arrow-back" size={22} color="#F5F1E8" />
+          </Pressable>
+
+          <Text style={styles.logo}>note.</Text>
+        </View>
 
         <Text style={styles.title}>Your profile.</Text>
+
         <Text style={styles.description}>
           Manage your account details.
         </Text>
@@ -188,7 +207,12 @@ export default function Profile() {
             <Text style={styles.sectionTitle}>Account details</Text>
 
             {!isEditingProfile && (
-              <Pressable onPress={() => setIsEditingProfile(true)}>
+              <Pressable
+                style={({ pressed }) => [
+                  pressed && styles.smallButtonPressed,
+                ]}
+                onPress={() => setIsEditingProfile(true)}
+              >
                 <Text style={styles.editText}>Edit Profile</Text>
               </Pressable>
             )}
@@ -197,6 +221,7 @@ export default function Profile() {
           {isEditingProfile ? (
             <>
               <Text style={styles.label}>Username</Text>
+
               <TextInput
                 style={styles.input}
                 value={username}
@@ -207,6 +232,7 @@ export default function Profile() {
               />
 
               <Text style={styles.label}>Email address</Text>
+
               <TextInput
                 style={styles.input}
                 value={email}
@@ -218,6 +244,7 @@ export default function Profile() {
               />
 
               <Text style={styles.label}>Current password *</Text>
+
               <TextInput
                 style={styles.input}
                 value={currentPassword}
@@ -238,7 +265,10 @@ export default function Profile() {
               </Pressable>
 
               <Pressable
-                style={styles.cancelButton}
+                style={({ pressed }) => [
+                  styles.cancelButton,
+                  pressed && styles.buttonPressed,
+                ]}
                 onPress={handleCancelProfileEdit}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -247,11 +277,13 @@ export default function Profile() {
           ) : (
             <>
               <Text style={styles.label}>Username</Text>
+
               <View style={styles.detailBox}>
                 <Text style={styles.detailText}>{user.username}</Text>
               </View>
 
               <Text style={styles.label}>Email address</Text>
+
               <View style={styles.detailBox}>
                 <Text style={styles.detailText}>{user.email}</Text>
               </View>
@@ -264,7 +296,12 @@ export default function Profile() {
             <Text style={styles.sectionTitle}>Password</Text>
 
             {!isChangingPassword && (
-              <Pressable onPress={() => setIsChangingPassword(true)}>
+              <Pressable
+                style={({ pressed }) => [
+                  pressed && styles.smallButtonPressed,
+                ]}
+                onPress={() => setIsChangingPassword(true)}
+              >
                 <Text style={styles.editText}>Change Password</Text>
               </Pressable>
             )}
@@ -273,6 +310,7 @@ export default function Profile() {
           {isChangingPassword ? (
             <>
               <Text style={styles.label}>Current password *</Text>
+
               <TextInput
                 style={styles.input}
                 value={currentPassword}
@@ -283,6 +321,7 @@ export default function Profile() {
               />
 
               <Text style={styles.label}>New password</Text>
+
               <TextInput
                 style={styles.input}
                 value={newPassword}
@@ -293,6 +332,7 @@ export default function Profile() {
               />
 
               <Text style={styles.label}>Confirm new password</Text>
+
               <TextInput
                 style={styles.input}
                 value={confirmPassword}
@@ -309,11 +349,16 @@ export default function Profile() {
                 ]}
                 onPress={handleChangePassword}
               >
-                <Text style={styles.updateButtonText}>Update Password</Text>
+                <Text style={styles.updateButtonText}>
+                  Update Password
+                </Text>
               </Pressable>
 
               <Pressable
-                style={styles.cancelButton}
+                style={({ pressed }) => [
+                  styles.cancelButton,
+                  pressed && styles.buttonPressed,
+                ]}
                 onPress={handleCancelPasswordChange}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -350,11 +395,24 @@ const styles = StyleSheet.create({
     paddingTop: 55,
     paddingBottom: 45,
   },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 35,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#1E1E1E",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 15,
+  },
   logo: {
     color: "#D97745",
     fontSize: 29,
     fontWeight: "800",
-    marginBottom: 35,
   },
   title: {
     color: "#F5F1E8",
@@ -493,5 +551,8 @@ const styles = StyleSheet.create({
   buttonPressed: {
     opacity: 0.7,
     transform: [{ scale: 0.98 }],
+  },
+  smallButtonPressed: {
+    opacity: 0.6,
   },
 });

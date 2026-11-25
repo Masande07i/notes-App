@@ -81,9 +81,14 @@ export default function Home() {
         <View style={styles.header}>
           <Text style={styles.logo}>note.</Text>
 
-          <Pressable onPress={() => router.push("/protected/profile")}>
-            <Text style={styles.profileText}>Profile</Text>
-          </Pressable>
+          <Pressable
+          style={({ pressed }) => [
+            pressed && styles.profilePressed,
+          ]}
+          onPress={() => router.push("/protected/profile")}
+        >
+          <Text style={styles.profileText}>Profile</Text>
+        </Pressable>
         </View>
 
         <View style={styles.welcomeSection}>
@@ -200,6 +205,10 @@ const styles = StyleSheet.create({
   section: {
     marginTop: 40,
   },
+  profilePressed: {
+  opacity: 0.6,
+  transform: [{ scale: 0.97 }],
+},
   sectionTitle: {
     color: "#F5F1E8",
     fontSize: 19,

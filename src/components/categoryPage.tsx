@@ -9,6 +9,8 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AddNoteModal, {
   NoteCategory,
@@ -32,6 +34,8 @@ type Props = {
 };
 
 export default function CategoryPage({ category }: Props) {
+  const router = useRouter();
+
   const [notes, setNotes] = useState<Note[]>([]);
   const [notesKey, setNotesKey] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
@@ -165,6 +169,13 @@ export default function CategoryPage({ category }: Props) {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
+          <Pressable
+            style={styles.backButton}
+            onPress={() => router.push("/protected/home")}
+          >
+            <Ionicons name="arrow-back" size={22} color="#F5F1E8" />
+          </Pressable>
+
           <Text style={styles.logo}>note.</Text>
 
           <Pressable
@@ -251,6 +262,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 35,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#1E1E1E",
+    justifyContent: "center",
+    alignItems: "center",
   },
   logo: {
     color: "#D97745",
